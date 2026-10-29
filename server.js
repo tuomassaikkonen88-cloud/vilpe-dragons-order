@@ -69,7 +69,7 @@ function resolveRoll() {
   const totals = rolls.map(x => ({ ...x, tot: G.rollTotal(x.r, x.c, o.tag) }));
   const avg = totals.reduce((s, x) => s + x.tot, 0) / totals.length;
   const tier = G.tierOf(avg, sc.dc);
-  const mult = { legendary: 1.5, success: 1, partial: 0.5 }[tier] || 1;
+  const mult = { legendary: 1.5, success: 1, partial: 0.75 }[tier] || 1;
   const base = tier === 'fail' ? o.lose : o.win;
   const d = { g: Math.round(base.g * mult / 10) * 10, v: Math.round(base.v * mult / 50) * 50, m: Math.round(base.m * mult) };
   H.res.g = Math.max(0, H.res.g + d.g); H.res.v = Math.max(0, H.res.v + d.v); H.res.m = clamp(H.res.m + d.m, 0, 100);
@@ -87,9 +87,14 @@ function resolveRoll() {
 }
 function finishGame() {
   const r = H.res;
-  const score = Math.min(r.v / 10000, 1.2) * 50 + r.m * 0.4 + Math.min(r.g, 400) / 40;
-  const id = score >= 78 ? 'legendary' : score >= 58 ? 'success' : score >= 38 ? 'messy' : 'disaster';
-  H.ending = { id, score: Math.round(score) };
+  const full = r.v >= 10000;
+  let id;
+  if (r.v < 4000 || r.m < 20) id = 'disaster';
+  else if (full && r.m >= 70) id = 'legendary';
+  else if (full && r.m >= 40) id = 'success';
+  else if (r.v >= 7500 && r.m >= 40) id = 'short';
+  else id = 'messy';
+  H.ending = { id, v: r.v, m: r.m, g: r.g };
   const gl = Object.values(H.glory); const aw = [];
   if (gl.length) {
     const by = f => [...gl].sort(f)[0];

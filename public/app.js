@@ -141,7 +141,7 @@ function playerBody(me,my){
       if(S.phase==='awards'&&S.awards){
         a=`<div class="eyebrow">${esc(t('awards'))}</div>`+S.awards.map(x=>`<div class="hero" style="padding:8px 12px"><div><small class="muted">${esc(t('aw_'+x.k))}</small><div class="nm">${esc(x.n)}</div>${x.n===me.n?`<b class="t-legendary">${esc(t('youWon'))}</b>`:''}</div></div>`).join('');
       }
-      return `<div class="card"><div class="eyebrow">${esc(t('theEnd'))}</div>${e?`<h2>${esc(L(e).t)}</h2><div class="narr">${esc(L(e).n)}</div>`:''}${a}</div>`;}
+      return `<div class="card"><div class="eyebrow">${esc(t('theEnd'))}</div>${e?`<h2>${esc(L(e).t)}</h2>${S.ending?`<div class="deltas"><span class="delta ${S.ending.v>=10000?'up':'down'}">${esc(t('endStats'))} ${fmt(S.res.v)} ${esc(t('ofOrder'))}</span><span class="delta">${esc(t('mood'))}: ${esc(moodWord(S.res.m))}</span><span class="delta">${esc(t('gold'))}: ${fmt(S.res.g)}</span></div>`:''}<div class="narr">${esc(L(e).n)}</div>`:''}${a}</div>`;}
   }
   return '';
 }
@@ -217,7 +217,7 @@ function renderHost(){
     case 'ending':{
       const e=ENDINGS[S.ending.id];
       h=`<div style="display:grid;gap:18px;max-width:900px"><div class="eyebrow">${esc(t('theEnd'))}</div>
-        <h2 style="font-size:clamp(3rem,7vw,6rem);color:var(--gold)">${esc(L(e).t)}</h2><div class="narr" style="font-size:clamp(1.2rem,2vw,1.8rem);max-width:44ch">${esc(L(e).n)}</div></div>`;break;}
+        <h2 style="font-size:clamp(3rem,6vw,5.2rem);color:var(--gold)">${esc(L(e).t)}</h2>${S.ending?`<div class="deltas"><span class="delta ${S.ending.v>=10000?'up':'down'}">${esc(t('endStats'))} ${fmt(S.res.v)} ${esc(t('ofOrder'))}</span><span class="delta">${esc(t('mood'))}: ${esc(moodWord(S.res.m))}</span><span class="delta">${esc(t('gold'))}: ${fmt(S.res.g)}</span></div>`:''}<div class="narr" style="font-size:clamp(1.1rem,1.65vw,1.55rem);max-width:62ch;line-height:1.5">${esc(L(e).n)}</div></div>`;break;}
     case 'awards':{
       const e=ENDINGS[S.ending.id];
       h=`<div style="display:grid;gap:22px"><div><div class="eyebrow">${esc(L(e).t)}</div><h2 style="font-size:clamp(2.6rem,5vw,4.4rem)">${esc(t('awards'))}</h2></div>

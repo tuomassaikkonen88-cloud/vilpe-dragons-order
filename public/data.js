@@ -27,13 +27,13 @@ const SCENES=[
  en:{t:"The Forge at Midnight",n:"10,000 vents by dawn means the Grand Vent Forge must run hotter than ever. The moulding machines hiss, the night is long and the coffee is running low. How do we ramp up production?"},
  fi:{t:"Paja keskiyöllä",n:"10 000 tuuletinta aamuun mennessä: Suuren Tuuletinpajan on käytävä kuumempana kuin koskaan. Valukoneet sihisevät, yö on pitkä ja kahvi loppumassa. Miten tuotanto nostetaan?"},
  o:[
-  {tag:'craft',win:{g:0,v:5000,m:0},lose:{g:-30,v:1500,m:0},
+  {tag:'craft',win:{g:0,v:6500,m:0},lose:{g:-30,v:1500,m:0},
    en:{t:"Overclock the Great Moulding Machine",w:"The machine sings in a deep dwarven baritone and spits out vents faster than anyone can count.",l:"The machine overheats, makes one perfect vent, then a cloud of smoke shaped like the CEO."},
    fi:{t:"Ylikellota Suuri Valukone",w:"Kone laulaa syvää kääpiöbaritonia ja sylkee tuulettimia nopeammin kuin kukaan ehtii laskea.",l:"Kone ylikuumenee, tekee yhden täydellisen tuulettimen ja sitten toimitusjohtajan muotoisen savupilven."}},
-  {tag:'charm',win:{g:-20,v:4500,m:0},lose:{g:-40,v:2000,m:0},
+  {tag:'charm',win:{g:-20,v:6000,m:0},lose:{g:-40,v:2000,m:0},
    en:{t:"Recruit the goblin night shift",w:"Forty goblins sign up for pizza and glory. It turns out they love quality control.",l:"The goblins unionise at 2 a.m. and demand dental care. Production pauses for negotiations."},
    fi:{t:"Värvää hiisien yövuoro",w:"Neljäkymmentä hiittä pestautuu pizzasta ja kunniasta. Paljastuu, että ne rakastavat laadunvalvontaa.",l:"Hiidet perustavat ammattiliiton kello kaksi yöllä ja vaativat hammashoidon. Tuotanto seisoo neuvottelujen ajan."}},
-  {tag:'arcane',win:{g:0,v:6000,m:0},lose:{g:0,v:500,m:-10},
+  {tag:'arcane',win:{g:0,v:7500,m:0},lose:{g:0,v:500,m:-10},
    en:{t:"Enchant the line with AI runes",w:"The AI runes optimise everything. The forge now produces vents and motivational quotes.",l:"The AI decides the optimal number of vents is three. It is very confident about this."},
    fi:{t:"Lumoa linja tekoälyriimuilla",w:"Tekoälyriimut optimoivat kaiken. Paja tuottaa nyt tuulettimia ja motivaatiolainauksia.",l:"Tekoäly päättää, että optimaalinen määrä on kolme tuuletinta. Se on asiasta hyvin varma."}}
  ]},
@@ -41,13 +41,13 @@ const SCENES=[
  en:{t:"The Roof Trolls Strike",n:"Disaster! The raw material caravan from the coast has been ambushed by roof trolls. They have hauled everything onto the rooftops of Old Town and are using our plastic granulate as a ball pit."},
  fi:{t:"Kattopeikkojen hyökkäys",n:"Katastrofi! Rannikolta tuleva raaka-ainekaravaani on joutunut kattopeikkojen väijytykseen. Ne ovat raahanneet kaiken Vanhankaupungin katoille ja käyttävät muovirakeitamme pallomerenä."},
  o:[
-  {tag:'might',win:{g:30,v:2500,m:0},lose:{g:0,v:-1000,m:0},
+  {tag:'might',win:{g:30,v:4000,m:0},lose:{g:0,v:-1000,m:0},
    en:{t:"Charge the rooftops",w:"A heroic charge across the ridges. The trolls flee and leave a few gold coins behind.",l:"The charge meets a slippery roof. Half the guild slides into a hay cart and the trolls keep the granulate."},
    fi:{t:"Rynnäkkö katoille",w:"Sankarillinen rynnäkkö harjakattojen yli. Peikot pakenevat ja jättävät jälkeensä muutaman kultakolikon.",l:"Rynnäkkö kohtaa liukkaan katon. Puolet killasta liukuu heinäkärryyn, ja peikot pitävät rakeet."}},
-  {tag:'scout',win:{g:0,v:3000,m:0},lose:{g:0,v:500,m:0},
+  {tag:'scout',win:{g:0,v:4500,m:0},lose:{g:0,v:500,m:0},
    en:{t:"Track them across the rooftops",w:"Silent as a chimney draft, the rangers recover every last bag.",l:"The trail leads to a chimney. Then another chimney. Then lunch."},
    fi:{t:"Jäljitä ne kattoja pitkin",w:"Hiljaa kuin hormin veto samoojat nappaavat takaisin viimeistäkin säkkiä myöten.",l:"Jäljet johtavat savupiippuun. Sitten toiseen savupiippuun. Sitten lounaalle."}},
-  {tag:'cunning',win:{g:40,v:2000,m:10},lose:{g:-50,v:0,m:0},
+  {tag:'cunning',win:{g:40,v:3500,m:10},lose:{g:-50,v:0,m:0},
    en:{t:"Strike a deal with the trolls",w:"The trolls trade the granulate back for VILPE vents for their damp caves. A brand new customer segment!",l:"The trolls out-negotiate us. We now owe them gold and a monthly newsletter."},
    fi:{t:"Tee diili peikkojen kanssa",w:"Peikot vaihtavat rakeet takaisin VILPE-tuulettimiin kosteisiin luoliinsa. Upouusi asiakassegmentti!",l:"Peikot neuvottelevat meidät nurkkaan. Olemme nyt heille velkaa kultaa ja kuukausittaisen uutiskirjeen."}}
  ]},
@@ -55,13 +55,13 @@ const SCENES=[
  en:{t:"The Delivery",n:"The vents are packed. Between the forge and Emberbeard's lair lie the Misty Mountains, a troll bridge with a strict toll policy, and three hours until dawn. How do we deliver?"},
  fi:{t:"Toimitus",n:"Tuulettimet on pakattu. Pajan ja Hiiliparran luolan välissä ovat Sumuvuoret, tiukan tullipolitiikan peikkosilta ja kolme tuntia aamunkoittoon. Miten toimitamme?"},
  o:[
-  {tag:'scout',win:{g:0,v:1000,m:10},lose:{g:0,v:-2000,m:0},
+  {tag:'scout',win:{g:0,v:2000,m:10},lose:{g:0,v:-2000,m:0},
    en:{t:"Fly with rented griffins",w:"The griffins land at the lair early. Emberbeard writes it down: supplier on time.",l:"The griffins spot a sheep farm. Several pallets are now somewhere over Sweden."},
    fi:{t:"Lennä vuokragriffoneilla",w:"Griffonit laskeutuvat luolalle etuajassa. Hiiliparta kirjaa: toimittaja täsmällinen.",l:"Griffonit huomaavat lammastilan. Useita lavoja on nyt jossain Ruotsin yllä."}},
-  {tag:'might',win:{g:0,v:1500,m:0},lose:{g:-30,v:-1500,m:0},
+  {tag:'might',win:{g:0,v:2500,m:0},lose:{g:-30,v:-1500,m:0},
    en:{t:"Convoy over the troll bridge",w:"The convoy rolls through. The bridge troll respects a firm handshake and waives the toll.",l:"The troll charges one vent per wheel. The convoy has a lot of wheels."},
    fi:{t:"Saattue peikkosillan yli",w:"Saattue jyrää läpi. Siltapeikko arvostaa jämäkkää kättelyä ja antaa tullin anteeksi.",l:"Peikko vaatii tullia yhden tuulettimen per pyörä. Saattueessa on paljon pyöriä."}},
-  {tag:'arcane',win:{g:0,v:0,m:15},lose:{g:0,v:-1000,m:-10},
+  {tag:'arcane',win:{g:0,v:1500,m:15},lose:{g:0,v:-1000,m:-10},
    en:{t:"Open a portal straight into the lair",w:"Whoosh! The vents arrive in a neat stack and Emberbeard is delighted by the express service.",l:"The portal opens into the neighbouring dragon's lair. She is now a very happy VILPE customer. He is not."},
    fi:{t:"Avaa portaali suoraan luolaan",w:"Vuuh! Tuulettimet saapuvat siistissä pinossa, ja Hiiliparta ihastuu pikatoimitukseen.",l:"Portaali aukeaa naapurilohikäärmeen luolaan. Hän on nyt hyvin tyytyväinen VILPE-asiakas. Hiiliparta ei ole."}}
  ]},
@@ -81,14 +81,16 @@ const SCENES=[
  ]}
 ];
 const ENDINGS={
- legendary:{en:{t:"Legend of the Vent Forge",n:"Emberbeard is so pleased that he signs on as VILPE's official distributor for every dragon lair in the realm. Bards will sing of this guild for generations, mostly about the roof vents."},
-            fi:{t:"Tuuletinpajan legenda",n:"Hiiliparta on niin tyytyväinen, että hänestä tulee VILPEn virallinen jälleenmyyjä kaikkiin valtakunnan lohikäärmeluoliin. Bardit laulavat killasta sukupolvien ajan, lähinnä kattotuulettimista."}},
- success:{en:{t:"Paid in Full",n:"The lair is dry, the gold shines and the invoice is paid with only light scorch marks. Another satisfied customer for the Grand Vent Forge."},
-          fi:{t:"Maksettu kokonaan",n:"Luola on kuiva, kulta kiiltää ja lasku on maksettu vain kevyin kärventymisjäljin. Jälleen yksi tyytyväinen asiakas Suurelle Tuuletinpajalle."}},
- messy:{en:{t:"A Bit Singed",n:"Emberbeard grumbles, pays half and demands a service contract. The guild survives with slightly shorter eyebrows. Not bad for one night's work."},
-        fi:{t:"Hieman kärventynyt",n:"Hiiliparta murisee, maksaa puolet ja vaatii huoltosopimuksen. Kilta selviää hieman lyhyemmin kulmakarvoin. Ei paha yhden yön työksi."}},
- disaster:{en:{t:"A Glorious Disaster",n:"Emberbeard roasts the loading dock in a fury. Luckily the forge is now extremely well ventilated, and the smoke clears in record time."},
-           fi:{t:"Loistelias katastrofi",n:"Hiiliparta grillaa lastauslaiturin raivoissaan. Onneksi paja on nyt erinomaisesti tuuletettu, ja savu poistuu ennätysajassa."}}
+ legendary:{en:{t:"Legend of the Vent Forge",n:"At sunrise Emberbeard lands on the forge roof, and for a long moment nobody breathes. Then he lowers his enormous head and inspects the work: ten thousand VILPE roof vents, every one level, sealed and breathing perfectly. The damp is gone, the green has faded from his gold, and for the first time in three hundred years his treasure smells of fresh mountain air. He pays double, signs a framework agreement for every dragon lair in the realm and asks whether the guild also does service contracts. Bards will sing of this night for generations, mostly about the roof vents. Somewhere a quality manager quietly marks the order: delivered to spec."},
+            fi:{t:"Tuuletinpajan legenda",n:"Auringon noustessa Hiiliparta laskeutuu pajan katolle, eikä kukaan uskalla hengittää. Sitten hän laskee valtavan päänsä ja tarkastaa työn: kymmenentuhatta VILPE-kattotuuletinta, jokainen suorassa, tiivis ja täydellisesti hengittävä. Kosteus on poissa, vihreä on kadonnut kullasta, ja ensimmäistä kertaa kolmeensataan vuoteen aarre tuoksuu raikkaalta vuoristoilmalta. Hän maksaa tuplasti, allekirjoittaa puitesopimuksen valtakunnan jokaiseen lohikäärmeluolaan ja kysyy, tekeekö kilta myös huoltosopimuksia. Bardit laulavat tästä yöstä sukupolvien ajan, lähinnä kattotuulettimista. Jossain laatupäällikkö merkitsee hiljaa tilaukseen: toimitettu speksin mukaan."}},
+ success:{en:{t:"Paid in Full",n:"Dawn finds all ten thousand vents in place. Emberbeard walks the length of his lair twice, sniffing suspiciously, but the air is dry and his gold has stopped turning green. He grumbles that the delivery note was smudged, then pays the invoice in full, with only light scorch marks on the corners. On his way out he asks for a brochure for a friend, a cousin down south with a mould problem. The guild staggers home to sleep for a week. Another satisfied customer for the Grand Vent Forge, and an order delivered to VILPE spec."},
+          fi:{t:"Maksettu kokonaan",n:"Aamunkoitto löytää kaikki kymmenentuhatta tuuletinta paikoiltaan. Hiiliparta kävelee luolansa päästä päähän kahdesti ja nuuhkii epäluuloisesti, mutta ilma on kuiva ja kulta on lakannut vihertämästä. Hän murisee, että lähetysluettelo oli tuhriintunut, ja maksaa sitten laskun kokonaan, vain kulmista kevyesti kärventyneenä. Lähtiessään hän pyytää esitteen kaverille, etelässä asuvalle serkulle, jolla on homeongelma. Kilta raahautuu kotiin nukkumaan viikoksi. Jälleen yksi tyytyväinen asiakas Suurelle Tuuletinpajalle, ja tilaus toimitettu VILPE-speksin mukaan."}},
+ short:{en:{t:"Almost to Spec",n:"When the sun rises, Emberbeard counts. Then he counts again. The vents that arrived are excellent, he admits, but a dragon knows exactly how many of anything he owns, and this is not ten thousand. One corner of the lair is still damp, and the gold there still smells faintly of sauna towel. He pays for what was delivered, keeps the deposit for the rest and books a follow-up delivery for next week, with a penalty clause written in fire. Not a disaster, but not VILPE spec either. The production manager is already drafting the root cause analysis."},
+        fi:{t:"Melkein speksissä",n:"Auringon noustessa Hiiliparta laskee. Sitten hän laskee uudelleen. Perille tulleet tuulettimet ovat erinomaisia, hän myöntää, mutta lohikäärme tietää tarkalleen, montako mitäkin hän omistaa, eikä tämä ole kymmenentuhatta. Luolan yksi nurkka on yhä kostea, ja siellä kulta tuoksuu edelleen hieman saunapyyhkeeltä. Hän maksaa toimitetusta, pitää ennakkomaksun lopuista ja varaa täydennystoimituksen ensi viikolle, sopimussakko tulella kirjoitettuna. Ei katastrofi, mutta ei VILPE-speksiäkään. Tuotantopäällikkö kirjoittaa jo juurisyyanalyysiä."}},
+ messy:{en:{t:"A Bit Singed",n:"Dawn comes, and so does the reckoning. Too few vents, too many surprises, and a dragon whose patience was thin to begin with. Emberbeard roars once, mostly for effect, and the loading dock loses its paint. He pays half, demands a five-year service contract and insists that the VILPE Sense crystal supervise every future delivery. The guild survives with slightly shorter eyebrows and a very long list of lessons learned. Not bad for one night's work. Not good either."},
+        fi:{t:"Hieman kärventynyt",n:"Aamu koittaa, ja niin koittaa tilinteko. Liian vähän tuulettimia, liian monta yllätystä ja lohikäärme, jonka kärsivällisyys oli valmiiksi ohut. Hiiliparta karjaisee kerran, lähinnä tehokeinona, ja lastauslaiturista lähtee maali. Hän maksaa puolet, vaatii viiden vuoden huoltosopimuksen ja edellyttää, että VILPE Sense -kristalli valvoo jatkossa jokaista toimitusta. Kilta selviää hieman lyhyemmin kulmakarvoin ja hyvin pitkän opittujen asioiden listan kanssa. Ei paha yhden yön työksi. Ei kyllä hyväkään."}},
+ disaster:{en:{t:"A Glorious Disaster",n:"The sun rises on a disaster. Half the order is missing, the trolls are still playing in the granulate, and Emberbeard is not in the mood for excuses. He roasts the loading dock, the parking lot and, regrettably, the coffee machine. Luckily the forge is now extremely well ventilated, and the smoke clears in record time. When the embers have cooled, the guild gathers in the ashes and agrees on one thing: next year, production starts before midnight."},
+           fi:{t:"Loistelias katastrofi",n:"Aurinko nousee katastrofin ylle. Puolet tilauksesta puuttuu, peikot leikkivät yhä raaka-aineilla, eikä Hiiliparta ole selitysten tuulella. Hän grillaa lastauslaiturin, parkkipaikan ja valitettavasti myös kahvinkeittimen. Onneksi paja on nyt erinomaisesti tuuletettu, ja savu poistuu ennätysajassa. Kun hiillos on jäähtynyt, kilta kokoontuu tuhkaan ja on yhtä mieltä yhdestä asiasta: ensi vuonna tuotanto aloitetaan ennen keskiyötä."}}
 };
 const T={
 en:{title:"The Dragon's Order",sub:"A party adventure in the Grand Vent Forge of VILPE",run:"Run the game (big screen + DM)",join:"Join as a player",
@@ -98,7 +100,7 @@ en:{title:"The Dragon's Order",sub:"A party adventure in the Grand Vent Forge of
  listen:"Listen to the Dungeon Master…",voteNow:"Vote for the guild's plan",voted:"Vote cast. You can still change it.",yourBonus:"+3 for you!",
  rollNow:"Roll for the guild!",tapRoll:"Tap the die",chosen:"The guild chose",rolled:"Your roll",bonus:"class bonus",nat20:"NATURAL 20! Legendary!",nat1:"NATURAL 1… the dragon saw that.",
  waitReveal:"Waiting for the DM to reveal the guild's fate…",groupAvg:"Guild average",dc:"Difficulty",
- tier_legendary:"Legendary success!",tier_success:"Success",tier_partial:"Partial success",partialNote:"Below the difficulty, but close: the plan only half works. Half rewards.",tier_fail:"Failure",
+ tier_legendary:"Legendary success!",tier_success:"Success",tier_partial:"Partial success",partialNote:"Below the difficulty, but close: the plan only partly works. Reduced rewards.",tier_fail:"Failure",
  gold:"Gold",vents:"Vents delivered",mood:"Dragon mood",of:"of",
  mood0:"Furious",mood1:"Grumpy",mood2:"Watchful",mood3:"Pleased",mood4:"Delighted",
  scene:"Scene",theEnd:"The End",awards:"Guild awards",
@@ -112,7 +114,7 @@ en:{title:"The Dragon's Order",sub:"A party adventure in the Grand Vent Forge of
  guildDie:"Roll a guild die",guild:"Guild die",hands:"Hands",fullscreen:"Fullscreen",live:"Live",offline:"Offline: hand votes and guild dice only",
  crits:"Natural 20s",fumbles:"Natural 1s",best:"Top roll",tieBreak:"A tie! The dice decided.",
  prologue:"Tonight the Grand Vent Forge of VILPE takes on its strangest customer yet. Create your hero on your phone: every class gets +3 on its own kind of challenge.",
- tagHelp:"Bonus classes",reconnecting:"Reconnecting…",inRoom:"connected",waking:"Waking up the forge… (can take up to a minute)",hostKeyBad:"Wrong DM key. Open the DM link with the correct ?key=",joinUrl:"or open",onlineN:"online",kick:"Remove"},
+ tagHelp:"Bonus classes",endStats:"Delivered",ofOrder:"of 10,000 vents",reconnecting:"Reconnecting…",inRoom:"connected",waking:"Waking up the forge… (can take up to a minute)",hostKeyBad:"Wrong DM key. Open the DM link with the correct ?key=",joinUrl:"or open",onlineN:"online",kick:"Remove"},
 fi:{title:"Lohikäärmeen tilaus",sub:"Juhla-seikkailu VILPEn Suuressa Tuuletinpajassa",run:"Pyöritä peliä (iso näyttö + pelinjohtaja)",join:"Liity pelaajaksi",
  connecting:"Yhdistetään kiltasaliin…",noRoom:"Live-peliin ei saada yhteyttä täältä. Varmista, että olet kirjautunut claude.ai:hin ja avasit linkin, jonka pelinjohtaja jakoi.",
  yourName:"Sankarisi nimi",namePh:"esim. Herra Tuuletin",pickClass:"Valitse hahmoluokka",joinBtn:"Liity kiltaan",bonusOn:"+3:",
@@ -120,7 +122,7 @@ fi:{title:"Lohikäärmeen tilaus",sub:"Juhla-seikkailu VILPEn Suuressa Tuuletinp
  listen:"Kuuntele pelinjohtajaa…",voteNow:"Äänestä killan suunnitelmaa",voted:"Ääni annettu. Voit vielä vaihtaa.",yourBonus:"+3 sinulle!",
  rollNow:"Heitä killan puolesta!",tapRoll:"Napauta noppaa",chosen:"Kilta valitsi",rolled:"Heittosi",bonus:"luokkabonus",nat20:"LUONNOLLINEN 20! Legendaarista!",nat1:"LUONNOLLINEN 1… lohikäärme näki tuon.",
  waitReveal:"Odotetaan, että pelinjohtaja paljastaa killan kohtalon…",groupAvg:"Killan keskiarvo",dc:"Vaikeus",
- tier_legendary:"Legendaarinen onnistuminen!",tier_success:"Onnistui",tier_partial:"Osittainen onnistuminen",partialNote:"Vaikeuden alle, mutta lähellä: suunnitelma onnistuu vain puoliksi. Puolet palkinnoista.",tier_fail:"Epäonnistui",
+ tier_legendary:"Legendaarinen onnistuminen!",tier_success:"Onnistui",tier_partial:"Osittainen onnistuminen",partialNote:"Vaikeuden alle, mutta lähellä: suunnitelma onnistuu vain osittain. Pienemmät palkinnot.",tier_fail:"Epäonnistui",
  gold:"Kulta",vents:"Toimitetut tuulettimet",mood:"Lohikäärmeen mieliala",of:"/",
  mood0:"Raivoissaan",mood1:"Ärtynyt",mood2:"Valpas",mood3:"Tyytyväinen",mood4:"Ihastunut",
  scene:"Kohtaus",theEnd:"Loppu",awards:"Killan palkinnot",
@@ -133,7 +135,7 @@ fi:{title:"Lohikäärmeen tilaus",sub:"Juhla-seikkailu VILPEn Suuressa Tuuletinp
  guildDie:"Heitä killan noppa",guild:"Killan noppa",hands:"Kädet",fullscreen:"Koko näyttö",live:"Yhteys päällä",offline:"Ei yhteyttä: vain käsiäänestys ja killan nopat",
  crits:"Luonnolliset 20:t",fumbles:"Luonnolliset 1:t",best:"Paras heitto",tieBreak:"Tasapeli! Noppa ratkaisi.",
  prologue:"Tänä yönä VILPEn Suuri Tuuletinpaja kohtaa kaikkien aikojen oudoimman asiakkaansa. Luo sankarisi puhelimella: jokainen luokka saa +3 omanlaisiinsa haasteisiin.",
- tagHelp:"Bonusluokat",reconnecting:"Yhdistetään uudelleen…",inRoom:"yhteydessä",waking:"Herätellään pajaa… (voi kestää minuutin)",hostKeyBad:"Väärä pelinjohtajan avain. Avaa DM-linkki oikealla ?key=-arvolla",joinUrl:"tai avaa",onlineN:"paikalla",kick:"Poista"}
+ tagHelp:"Bonusluokat",endStats:"Toimitettu",ofOrder:"/ 10 000 tuuletinta",reconnecting:"Yhdistetään uudelleen…",inRoom:"yhteydessä",waking:"Herätellään pajaa… (voi kestää minuutin)",hostKeyBad:"Väärä pelinjohtajan avain. Avaa DM-linkki oikealla ?key=-arvolla",joinUrl:"tai avaa",onlineN:"paikalla",kick:"Poista"}
 };
 
 
