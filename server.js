@@ -176,6 +176,15 @@ const server = http.createServer(async (req, res) => {
     return fs.createReadStream(path.join(PUB, f)).pipe(res);
   }
   if (req.method === 'GET' && route === '/healthz') return json(res, 200, { ok: true });
+  const im = req.method === 'GET' && /^\/img\/([a-z0-9-]+)\.(jpg|png|webp)$/.exec(route);
+  if (im) {
+    const f = path.join(PUB, 'img', im[1] + '.' + im[2]);
+    return fs.stat(f, (err, st) => {
+      if (err || !st.isFile()) { res.writeHead(404, { 'Content-Type': 'text/plain' }); return res.end('Not found'); }
+      res.writeHead(200, { 'Content-Type': { jpg: 'image/jpeg', png: 'image/png', webp: 'image/webp' }[im[2]], 'Cache-Control': 'public, max-age=3600', 'Content-Length': st.size });
+      fs.createReadStream(f).pipe(res);
+    });
+  }
 
   if (req.method === 'GET' && route === '/events') {
     const host = url.searchParams.get('key') === HOST_KEY;

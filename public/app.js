@@ -166,6 +166,7 @@ function optCards(sc,mode){
      <div class="chips"><span class="pill">${esc(tagLabel(o.tag))}</span><span class="pill hot">+3 ${esc(classesFor(o.tag))}</span></div></div>`;
   }).join('');
 }
+const art=(name,cls)=>`<figure class="art ${cls||''}"><img src="/img/${name}.jpg" alt="" onerror="this.closest('figure').hidden=true"></figure>`;
 function duelHtml(dc,avg,tier){
   const max=Math.max(25,dc+9),pct=v=>clamp(v/max*100,0,100);
   const zones=[['fail',0,dc-3],['partial',dc-3,dc],['success',dc,dc+5],['legendary',dc+5,max]];
@@ -263,19 +264,18 @@ function renderHost(){
       h=`<div class="lobby"><div style="display:grid;gap:10px;justify-items:start">
         <div class="qr">${qrData?`<img src="${qrData}" alt="QR code">`:''}</div>
         <b class="callout" style="font-size:1.6rem">${esc(t('scanJoin'))}</b><span class="muted">${esc(t('joinUrl'))}</span><span class="joinurl">${esc(location.host)}</span></div>
-        <div style="display:grid;gap:16px;min-width:0"><div class="eyebrow">VILPE · Halloween</div>
+        <div style="display:grid;gap:16px;min-width:0">${art('lobby','wide')}<div class="eyebrow">VILPE · Halloween</div>
         <div class="narr" style="font-size:clamp(1.15rem,1.8vw,1.6rem);max-width:46ch">${esc(t('prologue'))}</div>
         <div class="eyebrow">${esc(t('heroes'))} · <span class="num">${ps.length}</span></div>
         <div class="chips">${ps.length?ps.map(p=>`<span class="chip"><span>${cls(p.c).ic}</span><span class="nm">${esc(p.n)}</span></span>`).join(''):`<span class="muted">${esc(t('noHeroes'))}</span>`}</div></div></div>`;
       break;
     case 'intro':
-      h=`<div class="stage"><div class="left">${head}<div class="narr">${esc(L(sc).n)}</div></div><div class="right">${optCards(sc,'intro')}</div></div>`;break;
+      h=`<div class="stage"><div class="left">${head}<div class="narr">${esc(L(sc).n)}</div></div><div class="right">${art('scene'+(S.scene+1))}</div></div>`;break;
     case 'vote':
       h=`<div class="stage"><div class="left">${head}<div class="callout">${esc(t('voteOnPhones'))}</div>
         <div class="bigcount"><span class="num" id="vCount"></span> <span>${esc(t('votesCast'))}</span> <span class="timer js-timer"></span></div><div class="alldone" id="allDone" hidden>${esc(t('allVoted'))}</div></div>
-        <div class="right vrace">${sc.o.map((o,i)=>`<div class="vrow" data-i="${i}"><div class="vtop"><span class="ttl">${String.fromCharCode(65+i)}. ${esc(L(o).t)}</span><span class="vcnt num">0</span></div>
-          <div class="chips"><span class="pill">${esc(tagLabel(o.tag))}</span><span class="pill hot">+3 ${esc(classesFor(o.tag))}</span></div>
-          <div class="vbar"><i style="width:0%"></i></div></div>`).join('')}</div></div>`;break;
+        <div class="right vrace">${art('scene'+(S.scene+1),'small')}${sc.o.map((o,i)=>`<div class="vrow vrow-l" data-i="${i}"><span class="vletter">${String.fromCharCode(65+i)}</span>
+          <div class="vbar"><i style="width:0%"></i></div><span class="vcnt num">0</span></div>`).join('')}</div></div>`;break;
     case 'roll':
       h=`<div class="stage"><div class="left">${head}${chosen()}
         ${S.tie?`<div class="muted">${esc(t('tieBreak'))}</div>`:''}

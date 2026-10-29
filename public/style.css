@@ -229,3 +229,14 @@ h1,h2,h3,.disp{font-family:var(--f-display);font-weight:700;letter-spacing:.01em
 @media (prefers-reduced-motion:reduce){.die3.drop,.tier.pop,.drumcall,.vbar i,.marker{animation:none;transition:none}}
 
 .alldone{font-family:var(--f-display);font-size:clamp(1.6rem,2.6vw,2.4rem);color:var(--gold);animation:pulse .9s ease-in-out infinite}
+
+/* ---- scene art ---- */
+.art{margin:0;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:var(--panel);box-shadow:0 20px 60px rgba(0,0,0,.45)}
+.art img{display:block;width:100%;height:auto;aspect-ratio:3/2;object-fit:cover}
+.art.wide img{aspect-ratio:21/9;max-height:38vh}
+.art.small img{aspect-ratio:21/9;max-height:26vh}
+/* letters-only vote race */
+.vrow-l{grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:18px;padding:14px 20px}
+.vletter{font-family:var(--f-display);font-size:clamp(2.4rem,3.6vw,3.4rem);line-height:1;color:var(--parch);min-width:1.1ch}
+.vrow-l.lead .vletter{color:var(--gold)}
+.vrow-l .vbar{height:clamp(30px,4.2vh,46px)}
