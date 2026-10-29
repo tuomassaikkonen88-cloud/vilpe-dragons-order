@@ -178,7 +178,6 @@ const server = http.createServer(async (req, res) => {
       if (b.key !== HOST_KEY) return json(res, 403, { error: 'bad_key' });
       if (b.action === 'next') advance();
       else if (b.action === 'reset') { H = fresh(); for (const p of players.values()) { p.vote = null; p.roll = null; } }
-      else if (b.action === 'hand' && H.phase === 'vote' && [0, 1, 2].includes(b.i)) H.hand[b.i] = Math.max(0, H.hand[b.i] + (b.d > 0 ? 1 : -1));
       else if (b.action === 'guild' && H.phase === 'roll' && H.guild.length < 40) H.guild.push(G.d20());
       else if (b.action === 'kick' && typeof b.n === 'string') { for (const p of players.values()) if (p.n === b.n) { p.n = ''; p.c = ''; } }
       broadcast(); return json(res, 200, { ok: true });

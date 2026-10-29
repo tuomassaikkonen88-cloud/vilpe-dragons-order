@@ -111,7 +111,7 @@ function renderPlayer(){
 }
 function playerBody(me,my){
   const sc=SCENES[S.scene];
-  const head=`<div class="eyebrow">${esc(t('scene'))} ${S.scene+1}/5</div><h2>${esc(L(sc).t)}</h2>`;
+  const head=`<div class="eyebrow">${esc(t('scene'))} ${S.scene+1}</div><h2>${esc(L(sc).t)}</h2>`;
   switch(S.phase){
     case 'lobby':return `<div class="card"><div class="eyebrow">VILPE</div><div class="narr">${esc(t('inLobby'))}</div><div class="muted num">${S.count} ${esc(t('onlineN'))}</div></div>`;
     case 'intro':return `<div class="card">${head}<div class="narr">${esc(L(sc).n)}</div><div class="muted">${esc(t('listen'))}</div></div>`;
@@ -177,12 +177,6 @@ function duel(oc){
       <div class="marker" style="left:${pct(oc.avg)}%"><b class="num">${oc.avg}</b></div>
     </div></div>`;
 }
-function questLog(){
-  const log=S.log||[];
-  return `<div class="qlog"><span class="eyebrow">${esc(t('questLog'))}</span><div class="qsteps">${SCENES.map((sc,i)=>{
-    const e=log.find(x=>x.s===i);const cur=!e&&i===S.scene&&S.phase!=='lobby';
-    return `<div class="qstep ${e?'done':cur?'cur':''}"><span class="qn num">${i+1}</span><div class="qt"><b>${esc(L(sc).t)}</b>${e?`<span class="qtier t-${e.tier}">${esc(t('tl_'+e.tier))} · ${esc(L(sc.o[e.w]).t)}</span>`:cur?`<span class="qtier" style="color:var(--ember)">${esc(t('nowPlaying'))}</span>`:''}</div></div>`;}).join('')}</div></div>`;
-}
 function renderHost(){
   $('#host').hidden=false;
   if(badKey||!hostKey){$('#hostBand').innerHTML='';$('#dmBar').innerHTML='';$('#hostStage').innerHTML=`<div class="err">${esc(t('hostKeyBad'))}</div>`;return;}
@@ -195,7 +189,7 @@ function renderHost(){
     <div class="meter"><span class="lbl">${esc(t('mood'))}</span><span class="val">${esc(moodWord(r.m))}</span><div class="bar mood"><i style="width:${r.m}%"></i></div></div>
    </div>`;
   const sc=SCENES[S.scene],ps=S.players||[];
-  const head=`<div class="scene-no">${esc(t('scene'))} ${S.scene+1} / 5</div><h2>${esc(L(sc).t)}</h2>`;
+  const head=`<div class="scene-no">${esc(t('scene'))} ${S.scene+1}</div><h2>${esc(L(sc).t)}</h2>`;
   let h='';
   switch(S.phase){
     case 'lobby':
@@ -212,8 +206,7 @@ function renderHost(){
     case 'vote':{
       const n=ps.filter(p=>p.voted).length;
       h=`<div class="stage"><div class="left">${head}<div class="callout">${esc(t('voteOnPhones'))}</div>
-        <div class="muted num" style="font-size:1.2rem">${n} / ${ps.length} ${esc(t('votesCast'))} · <span class="timer js-timer"></span></div>
-        <div class="muted">${esc(t('noPhones'))}</div></div><div class="right">${optCards(sc,'vote')}</div></div>`;break;}
+        <div class="muted num" style="font-size:1.2rem">${n} / ${ps.length} ${esc(t('votesCast'))} · <span class="timer js-timer"></span></div></div><div class="right">${optCards(sc,'vote')}</div></div>`;break;}
     case 'roll':{
       const o=sc.o[S.winner];const rolled=ps.filter(p=>p.r!=null).length;
       const chips=ps.map(p=>`<span class="chip ${p.r==null?'wait':p.r===20?'c20':p.r===1?'c1':''}"><span>${cls(p.c).ic}</span><span class="nm">${esc(p.n)}</span><span class="r num">${p.r==null?'·':p.r}</span></span>`).join('')
@@ -223,7 +216,7 @@ function renderHost(){
         ${S.tie?`<div class="muted">${esc(t('tieBreak'))}</div>`:''}
         <div class="callout">${esc(t('rollOnPhones'))}</div>
         <div class="muted num" style="font-size:1.2rem">${rolled} / ${ps.length} ${esc(t('rolledN'))} · ${esc(t('dc'))} ${sc.dc} · <span class="timer js-timer"></span></div></div>
-        <div class="right"><div class="chips">${chips||`<span class="muted">${esc(t('noPhones'))}</span>`}</div></div></div>`;break;}
+        <div class="right"><div class="chips">${chips}</div></div></div>`;break;}
     case 'result':{
       const o=sc.o[S.winner],oc=S.outcome;
       const chips=(S.lastRolls||[]).map(x=>`<span class="chip ${x.r===20?'c20':x.r===1?'c1':''}"><span>${x.c?cls(x.c).ic:'🎲'}</span><span class="nm">${esc(x.n||t('guild'))}</span><span class="r num">${x.tot}</span></span>`).join('');
@@ -245,14 +238,13 @@ function renderHost(){
   }
   const stage=$('#hostStage');const sig=S.phase+S.scene;
   if(stage.dataset.sig!==sig){stage.dataset.sig=sig;stage.classList.remove('fade-in');void stage.offsetWidth;stage.classList.add('fade-in');}
-  if(['intro','vote','roll','result'].includes(S.phase))h+=questLog();
   stage.innerHTML=h;renderDm();
 }
 function renderDm(){
   const bar=$('#dmBar');if(!S){bar.innerHTML=`<span class="tag">DM</span><span class="conn off">● ${esc(t('reconnecting'))}</span>`;return;}
   const labels={lobby:'begin',intro:'openVote',vote:'closeVote',roll:'reveal',result:S.scene<4?'next':'finale',ending:'showAwards',awards:'newGame'};
   let mid='';
-  if(S.phase==='vote')mid=`<span class="tag">${esc(t('hands'))}</span>`+[0,1,2].map(i=>`<span class="handbox"><button class="btn ghost small" data-hand="${i}" data-d="-1" aria-label="-1">−</button><b class="num">${String.fromCharCode(65+i)} ${S.hand[i]}</b><button class="btn ghost small" data-hand="${i}" data-d="1" aria-label="+1">+</button></span>`).join('');
+  if(false){}
   else if(S.phase==='roll')mid=`<button class="btn ghost small" id="dmGuild" type="button">🎲 ${esc(t('guildDie'))}</button>`;
   bar.innerHTML=`<span class="tag">DM</span><span class="conn ${connected?'on':'off'}">● ${esc(connected?t('live'):t('reconnecting'))} · ${(S.players||[]).length} ${esc(t('onlineN'))}</span>${mid}<span class="grow"></span>
     ${langSw()}<button class="btn ghost small" id="dmFs" type="button">${esc(t('fullscreen'))}</button>
@@ -261,7 +253,6 @@ function renderDm(){
   $('#dmNext').onclick=async e=>{e.target.disabled=true;armReset=false;await host('next');};
   $('#dmFs').onclick=()=>{try{const p=document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();p&&p.catch&&p.catch(()=>{});}catch(e){}};
   const rs=$('#dmReset');if(rs)rs.onclick=()=>{if(armReset){armReset=false;host('reset');}else{armReset=true;renderDm();setTimeout(()=>{if(armReset){armReset=false;renderDm();}},4000);}};
-  bar.querySelectorAll('[data-hand]').forEach(b=>b.onclick=()=>host('hand',{i:+b.dataset.hand,d:+b.dataset.d}));
   const gd=$('#dmGuild');if(gd)gd.onclick=()=>host('guild');
 }
 
