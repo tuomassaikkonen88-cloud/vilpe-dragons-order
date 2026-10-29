@@ -31,6 +31,12 @@ function online() {
   const now = Date.now();
   return [...players.values()].filter(p => p.n && (p.conns > 0 || now - p.seen < 90000));
 }
+// everyone shown on screens: online players, plus anyone who already rolled this scene (their roll still counts)
+function listed() {
+  const on = new Set(online()); const k = key();
+  for (const p of players.values()) if (p.n && p.roll && p.roll.k === k) on.add(p);
+  return [...on];
+}
 function liveTally() {
   const t = [...H.hand];
   for (const p of online()) if (p.vote && p.vote.k === key()) t[p.vote.v]++;
@@ -68,7 +74,7 @@ function advance() {
     case 'vote': {
       const tl = liveTally(); H.tally = tl; const max = Math.max(...tl);
       const tops = [0, 1, 2].filter(i => tl[i] === max);
-      H.tie = tops.length > 1; H.winner = tops[Math.floor(Math.random() * tops.length)];
+      H.tie = max > 0 && tops.length > 1; H.winner = tops[Math.floor(Math.random() * tops.length)];
       H.phase = 'roll'; H.guild = []; H.deadline = Date.now() + 30000; break;
     }
     case 'roll': resolveRoll(); H.phase = 'result'; H.deadline = 0; break;
@@ -133,7 +139,7 @@ function publicState() {
     runId: H.runId, phase: H.phase, scene: H.scene, winner: H.winner, tie: H.tie,
     tally: H.phase === 'vote' ? liveTally() : H.tally, hand: H.hand, outcome: H.outcome, res: H.res,
     left: Math.max(0, H.deadline - Date.now()), ending: H.ending, awards: H.awards, guild: H.guild, lastRolls: H.lastRolls, log: H.log,
-    players: online().map(p => ({ n: p.n, c: p.c, voted: !!(p.vote && p.vote.k === k), r: p.roll && p.roll.k === k ? p.roll.r : null })),
+    players: listed().map(p => ({ id: p.pub, n: p.n, c: p.c, voted: !!(p.vote && p.vote.k === k), r: p.roll && p.roll.k === k ? p.roll.r : null })),
   };
 }
 function meOf(pid) {
@@ -150,7 +156,7 @@ function broadcast() {
   pending = setTimeout(() => { pending = null; const st = publicState(); for (const cl of clients) send(cl, st); }, 80);
 }
 setInterval(() => { for (const cl of clients) { try { cl.res.write(': ping\n\n'); } catch (e) {} } }, 20000);
-setInterval(broadcast, 5000); // keeps timers and the online list fresh
+setInterval(() => { broadcast(); checkAuto(); }, 5000); // keeps timers and the online list fresh; re-checks auto-advance as players drop offline
 
 // ---------------- http ----------------
 function json(res, code, obj) { res.writeHead(code, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(obj)); }
@@ -163,7 +169,7 @@ function body(req) {
 const okPid = p => typeof p === 'string' && /^[a-z0-9]{8,32}$/.test(p);
 function getP(pid) {
   let p = players.get(pid);
-  if (!p) { if (players.size > 300) return null; p = { pid, n: '', c: '', vote: null, roll: null, conns: 0, seen: Date.now() }; players.set(pid, p); }
+  if (!p) { if (players.size > 300) return null; p = { pid, pub: Math.random().toString(36).slice(2, 10), n: '', c: '', vote: null, roll: null, conns: 0, seen: Date.now() }; players.set(pid, p); }
   p.seen = Date.now(); return p;
 }
 

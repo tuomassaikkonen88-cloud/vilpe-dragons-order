@@ -195,7 +195,7 @@ function setDuel(avg,dc){
 }
 function liveRolls(){
   const sc=SCENES[S.scene],o=sc.o[S.winner],rs=[];
-  (S.players||[]).forEach(p=>{if(p.r!=null)rs.push({k:'p:'+p.n+'|'+p.c,n:p.n,c:p.c,r:p.r});});
+  (S.players||[]).forEach(p=>{if(p.r!=null)rs.push({k:'p:'+(p.id||p.n+'|'+p.c),n:p.n,c:p.c,r:p.r});});
   (S.guild||[]).forEach((g,i)=>rs.push({k:'g:'+i,n:t('guild'),c:null,r:g}));
   rs.forEach(x=>x.tot=rollTotal(x.r,x.c,o.tag));
   const avg=rs.length?Math.round(rs.reduce((a,x)=>a+x.tot,0)/rs.length*10)/10:null;
@@ -318,19 +318,24 @@ function renderHost(){
   if(drum)startSpin(S.outcome.dc);
   renderDm();
 }
+let dmSig='';
 function renderDm(){
-  const bar=$('#dmBar');if(!S){bar.innerHTML=`<span class="tag">DM</span><span class="conn off">● ${esc(t('reconnecting'))}</span>`;return;}
+  const bar=$('#dmBar');if(!S){dmSig='';bar.innerHTML=`<span class="tag">DM</span><span class="conn off">● ${esc(t('reconnecting'))}</span>`;return;}
+  const connTxt=`● ${connected?t('live'):t('reconnecting')} · ${(S.players||[]).length} ${t('onlineN')}`;
+  const sig=[S.runId,S.phase,S.scene,lang,armReset?1:0,drumming()?1:0].join('|');
+  if(sig===dmSig){const c=$('#dmConn');if(c){c.className='conn '+(connected?'on':'off');c.textContent=connTxt;}return;}
+  dmSig=sig;
   const labels={lobby:'begin',intro:'openVote',vote:'closeVote',roll:'reveal',result:S.scene<SCENES.length-1?'next':'finale',ending:'showAwards',awards:'newGame'};
   let mid='';
   if(false){}
   else if(S.phase==='roll')mid=`<button class="btn ghost small" id="dmGuild" type="button">🎲 ${esc(t('guildDie'))}</button>`;
-  bar.innerHTML=`<span class="tag">DM</span><span class="conn ${connected?'on':'off'}">● ${esc(connected?t('live'):t('reconnecting'))} · ${(S.players||[]).length} ${esc(t('onlineN'))}</span>${mid}<span class="grow"></span>
+  bar.innerHTML=`<span class="tag">DM</span><span id="dmConn" class="conn ${connected?'on':'off'}">${esc(connTxt)}</span>${mid}<span class="grow"></span>
     ${langSw()}<button class="btn ghost small" id="dmFs" type="button">${esc(t('fullscreen'))}</button>
     ${S.phase!=='lobby'&&S.phase!=='awards'?`<button class="btn ghost small" id="dmReset" type="button">${esc(armReset?t('sure'):t('newGame'))}</button>`:''}
     <button class="btn" id="dmNext" type="button"${drumming()?' disabled':''}>${esc(t(labels[S.phase]))}</button>`;
-  $('#dmNext').onclick=async e=>{e.target.disabled=true;armReset=false;await host('next',{from:S.runId+'|'+S.scene+'|'+S.phase});};
+  $('#dmNext').onclick=async e=>{const btn=e.currentTarget;btn.disabled=true;armReset=false;const r=await host('next',{from:S.runId+'|'+S.scene+'|'+S.phase});if(!r||!r.ok){btn.disabled=false;}setTimeout(()=>{if(btn.isConnected&&btn.disabled&&!drumming()){btn.disabled=false;}},3000);};
   $('#dmFs').onclick=()=>{try{const p=document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();p&&p.catch&&p.catch(()=>{});}catch(e){}};
-  const rs=$('#dmReset');if(rs)rs.onclick=()=>{if(armReset){armReset=false;host('reset');}else{armReset=true;renderDm();setTimeout(()=>{if(armReset){armReset=false;renderDm();}},4000);}};
+  const rs=$('#dmReset');if(rs)rs.onclick=()=>{if(armReset){armReset=false;dmSig='';host('reset');}else{armReset=true;renderDm();setTimeout(()=>{if(armReset){armReset=false;renderDm();}},4000);}};
   const gd=$('#dmGuild');if(gd)gd.onclick=()=>host('guild');
 }
 
