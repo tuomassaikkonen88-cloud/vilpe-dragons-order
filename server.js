@@ -111,6 +111,7 @@ function finishGame() {
   if (r.v < 4000 || r.m < 20) id = 'disaster';
   else if (full && r.m >= 70) id = 'legendary';
   else if (full && r.m >= 40) id = 'success';
+  else if (full) id = 'grumpy';
   else if (r.v >= 7500 && r.m >= 40) id = 'short';
   else id = 'messy';
   H.ending = { id, v: r.v, m: r.m, g: r.g };
