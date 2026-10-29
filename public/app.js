@@ -320,7 +320,7 @@ function renderHost(){
 }
 function renderDm(){
   const bar=$('#dmBar');if(!S){bar.innerHTML=`<span class="tag">DM</span><span class="conn off">● ${esc(t('reconnecting'))}</span>`;return;}
-  const labels={lobby:'begin',intro:'openVote',vote:'closeVote',roll:'reveal',result:S.scene<4?'next':'finale',ending:'showAwards',awards:'newGame'};
+  const labels={lobby:'begin',intro:'openVote',vote:'closeVote',roll:'reveal',result:S.scene<SCENES.length-1?'next':'finale',ending:'showAwards',awards:'newGame'};
   let mid='';
   if(false){}
   else if(S.phase==='roll')mid=`<button class="btn ghost small" id="dmGuild" type="button">🎲 ${esc(t('guildDie'))}</button>`;

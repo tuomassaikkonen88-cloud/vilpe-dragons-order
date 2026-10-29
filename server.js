@@ -73,7 +73,7 @@ function advance() {
     }
     case 'roll': resolveRoll(); H.phase = 'result'; H.deadline = 0; break;
     case 'result':
-      if (H.scene < 4) { H.scene++; H.phase = 'intro'; H.outcome = null; H.winner = -1; H.lastRolls = []; }
+      if (H.scene < G.SCENES.length - 1) { H.scene++; H.phase = 'intro'; H.outcome = null; H.winner = -1; H.lastRolls = []; }
       else { finishGame(); H.phase = 'ending'; }
       break;
     case 'ending': H.phase = 'awards'; break;
