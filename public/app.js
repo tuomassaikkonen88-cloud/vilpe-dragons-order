@@ -30,8 +30,8 @@ if(isHost){const q=new URLSearchParams(location.search).get('key');if(q){ls.set(
 let pid=ls.get('vf_pid','');if(!/^[a-z0-9]{8,32}$/.test(pid)){pid=(Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2)).replace(/[^a-z0-9]/g,'').slice(0,16);ls.set('vf_pid',pid);}
 
 let S=null,connected=false,everConnected=false,badKey=false,localDeadline=0;
-function render(){document.documentElement.lang=lang;if(isHost)renderHost();else renderPlayer();}
-document.addEventListener('click',e=>{const b=e.target.closest('[data-lang]');if(b){lang=b.dataset.lang;ls.set('vf_lang',lang);render();}});
+function render(){document.documentElement.lang=isHost?'fi':lang;if(isHost)renderHost();else renderPlayer();}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-lang]');if(b&&!isHost){lang=b.dataset.lang;ls.set('vf_lang',lang);render();}});
 
 /* ---------------- live connection ---------------- */
 function connect(){
@@ -169,17 +169,33 @@ function optCards(sc,mode){
      <div class="chips"><span class="pill">${esc(tagLabel(o.tag))}</span>${modChips(o.tag)}</div></div>`;
   }).join('');
 }
+/* ---- bilingual helpers for the TV (Finnish first, English alongside) ---- */
+const tf=k=>T.fi[k]??T.en[k]??k, te=k=>T.en[k]??T.fi[k]??k;
+const BS=(fi,en,cls)=>`<span class="bi ${cls||''}"><span class="bf">${esc(fi)}</span><span class="be">${esc(en)}</span></span>`;
+const BI=(fi,en)=>fi===en?esc(fi):`${esc(fi)}<span class="bsep"> · </span><span class="bei">${esc(en)}</span>`;
+const bks=(k,cls)=>BS(tf(k),te(k),cls), bki=k=>BI(tf(k),te(k));
+const moodKey=m=>'mood'+Math.min(4,Math.floor(m/20.001));
+const fmtFi=n=>Math.round(n).toLocaleString('fi-FI');
+const tagBi=tag=>BI(TAGS[tag].fi,TAGS[tag].en);
+const twoCol=(fi,en,cls)=>`<div class="bicols ${cls||''}"><div class="bcol"><span class="lt">FI</span><p class="narr">${esc(fi)}</p></div><div class="bcol"><span class="lt">EN</span><p class="narr be-n">${esc(en)}</p></div></div>`;
+function deltaBi(d){
+  if(!d)return'';const o=[];
+  if(d.g)o.push(`<span class="delta ${d.g>0?'up':'down'}">${d.g>0?'+':''}${fmtFi(d.g)} ${BI('kultaa','gold')}</span>`);
+  if(d.v)o.push(`<span class="delta ${d.v>0?'up':'down'}">${d.v>0?'+':''}${fmtFi(d.v)} ${BI('tuuletinta','vents')}</span>`);
+  if(d.m)o.push(`<span class="delta ${d.m>0?'up':'down'}">${d.m>0?'+':''}${d.m} ${BI('mieliala','mood')}</span>`);
+  return o.length?`<div class="deltas">${o.join('')}</div>`:'';
+}
 const art=(name,cls)=>`<figure class="art ${cls||''}"><img src="/img/${name}.jpg" alt="" onerror="this.closest('figure').hidden=true"></figure>`;
 function duelHtml(dc,avg,tier){
   const max=Math.max(25,dc+9),pct=v=>clamp(v/max*100,0,100);
   const zones=[['fail',0,dc-3],['partial',dc-3,dc],['success',dc,dc+5],['legendary',dc+5,max]];
   const has=avg!=null;
   return `<div class="duel" data-max="${max}"><div class="duel-row">
-    <div class="dn"><div class="eyebrow">${esc(t('groupAvg'))}</div><div class="n num ${has?'t-'+tier:''}" id="dAvg">${has?avg:'–'}</div></div>
-    <div class="vsx">${esc(t('vsWord'))}</div>
-    <div class="dn"><div class="eyebrow">${esc(t('dc'))}</div><div class="n num">${dc}</div></div></div>
-    <div class="track" role="img" aria-label="${esc(t('groupAvg'))} ${has?avg:''}, ${esc(t('dc'))} ${dc}">
-      ${zones.map(([k,a,b])=>`<div class="zone z-${k}${k===tier?' on':''}" data-k="${k}" style="left:${pct(a)}%;width:${pct(b)-pct(a)}%"><span>${esc(t('tl_'+k))}</span></div>`).join('')}
+    <div class="dn"><div class="eyebrow">${bki('groupAvg')}</div><div class="n num ${has?'t-'+tier:''}" id="dAvg">${has?avg:'–'}</div></div>
+    <div class="vsx">vs</div>
+    <div class="dn"><div class="eyebrow">${bki('dc')}</div><div class="n num">${dc}</div></div></div>
+    <div class="track" role="img" aria-label="${esc(tf('groupAvg'))} ${has?avg:''}, ${esc(tf('dc'))} ${dc}">
+      ${zones.map(([k,a,b])=>`<div class="zone z-${k}${k===tier?' on':''}" data-k="${k}" style="left:${pct(a)}%;width:${pct(b)-pct(a)}%"><span>${esc(tf('tl_'+k))}<br>${esc(te('tl_'+k))}</span></div>`).join('')}
       <div class="dcline" style="left:${pct(dc)}%"></div>
       <div class="marker" id="dMarker" style="left:${has?pct(avg):0}%;opacity:${has?1:0}"><b class="num">${has?avg:''}</b></div>
     </div></div>`;
@@ -196,7 +212,7 @@ function setDuel(avg,dc){
 function liveRolls(){
   const sc=SCENES[S.scene],o=sc.o[S.winner],rs=[];
   (S.players||[]).forEach(p=>{if(p.r!=null)rs.push({k:'p:'+(p.id||p.n+'|'+p.c),n:p.n,c:p.c,r:p.r});});
-  (S.guild||[]).forEach((g,i)=>rs.push({k:'g:'+i,n:t('guild'),c:null,r:g}));
+  (S.guild||[]).forEach((g,i)=>rs.push({k:'g:'+i,n:tf('guild'),c:null,r:g}));
   rs.forEach(x=>x.tot=rollTotal(x.r,x.c,o.tag));
   const avg=rs.length?Math.round(rs.reduce((a,x)=>a+x.tot,0)/rs.length*10)/10:null;
   return{rs,avg,dc:sc.dc,tag:o.tag};
@@ -239,26 +255,22 @@ function startSpin(dc){
 }
 function renderHost(){
   $('#host').hidden=false;
-  if(badKey||!hostKey){$('#hostBand').innerHTML='';$('#dmBar').innerHTML='';$('#hostStage').innerHTML=`<div class="err">${esc(t('hostKeyBad'))}</div>`;return;}
-  if(!S){$('#hostBand').innerHTML=`<div class="brand"><h1>${esc(t('title'))}</h1></div>`;$('#hostStage').innerHTML=`<div class="muted">${esc(t('waking'))}</div>`;renderDm();return;}
-  const pk=S.runId+'|'+S.scene+'|'+S.phase;
-  if(pk!==lastPhaseKey){
-    lastPhaseKey=pk;
-  }
+  if(badKey||!hostKey){$('#hostBand').innerHTML='';$('#dmBar').innerHTML='';$('#hostStage').innerHTML=`<div class="err">${esc(tf('hostKeyBad'))}<br>${esc(te('hostKeyBad'))}</div>`;return;}
+  if(!S){$('#hostBand').innerHTML=`<div class="brand"><h1>${esc(tf('title'))}</h1><div class="sub">${esc(te('title'))}</div></div>`;$('#hostStage').innerHTML=`<div class="muted">${bki('waking')}</div>`;renderDm();return;}
   setHeat(S.res.m);
   const r=S.res;
-  $('#hostBand').innerHTML=`<div class="brand"><h1>${esc(t('title'))}</h1><div class="sub">${esc(t('sub'))}</div></div>
+  $('#hostBand').innerHTML=`<div class="brand"><h1>${esc(tf('title'))}</h1><div class="sub">${esc(te('title'))} · VILPE</div></div>
    <div class="score">
-    <div class="meter"><span class="lbl">${esc(t('gold'))}</span><span class="val num" style="color:var(--gold)">${fmt(r.g)}</span></div>
-    <div class="meter"><span class="lbl">${esc(t('vents'))}</span><span class="val num">${fmt(r.v)} <small class="muted" style="font-size:1rem">${esc(t('of'))} 10 000</small></span><div class="bar"><i style="width:${clamp(r.v/100,0,100)}%"></i></div></div>
-    <div class="meter"><span class="lbl">${esc(t('mood'))}</span><span class="val">${esc(moodWord(r.m))}</span><div class="bar mood"><i style="width:${r.m}%"></i></div></div>
+    <div class="meter"><span class="lbl">${bki('gold')}</span><span class="val num" style="color:var(--gold)">${fmtFi(r.g)}</span></div>
+    <div class="meter"><span class="lbl">${bki('vents')}</span><span class="val num">${fmtFi(r.v)} <small class="muted" style="font-size:1rem">/ 10 000</small></span><div class="bar"><i style="width:${clamp(r.v/100,0,100)}%"></i></div></div>
+    <div class="meter"><span class="lbl">${bki('mood')}</span><span class="val mval">${BI(tf(moodKey(r.m)),te(moodKey(r.m)))}</span><div class="bar mood"><i style="width:${r.m}%"></i></div></div>
    </div>`;
   const sc=SCENES[S.scene],ps=S.players||[],drum=drumming();
-  const head=`<div class="scene-no">${esc(t('scene'))} ${S.scene+1}</div><h2 class="stitle">${esc(L(sc).t)}</h2>`;
-  const chosen=()=>{const o=sc.o[S.winner];return `<div class="hopt win"><div class="top"><span class="ttl">${esc(t('chosen'))}: ${esc(L(o).t)}</span></div>
-        <div class="chips"><span class="pill">${esc(tagLabel(o.tag))}</span>${modChips(o.tag)}</div></div>`;};
+  const head=`<div class="scene-no">${BI(tf('scene')+' '+(S.scene+1),te('scene')+' '+(S.scene+1))}</div><h2 class="stitle">${BS(sc.fi.t,sc.en.t)}</h2>`;
+  const chosen=()=>{const o=sc.o[S.winner];return `<div class="hopt win"><div class="top"><span class="ttl">${esc(tf('chosen'))}: ${BS(o.fi.t,o.en.t,'sm')}</span></div>
+        <div class="chips"><span class="pill">${tagBi(o.tag)}</span>${modChips(o.tag)}</div></div>`;};
   const stage=$('#hostStage');
-  const sig=[S.runId,S.phase,S.scene,S.winner,lang,drum?'drum':''].join('|');
+  const sig=[S.runId,S.phase,S.scene,S.winner,drum?'drum':''].join('|');
   const live={vote:updateVote,roll:updateRoll}[S.phase];
   if((live||drum)&&stage.dataset.sig===sig){if(live)live();renderDm();return;}
   let h='';
@@ -266,73 +278,73 @@ function renderHost(){
     case 'lobby':
       h=`<div class="lobby3"><div style="display:grid;gap:10px;justify-items:start">
         <div class="qr">${qrData?`<img src="${qrData}" alt="QR code">`:''}</div>
-        <b class="callout" style="font-size:1.6rem">${esc(t('scanJoin'))}</b><span class="muted">${esc(t('joinUrl'))}</span><span class="joinurl">${esc(location.host)}</span></div>
+        <b class="callout" style="font-size:1.6rem">${bks('scanJoin')}</b><span class="muted">${bki('joinUrl')}</span><span class="joinurl">${esc(location.host)}</span></div>
         <div style="display:grid;gap:16px;min-width:0;align-content:start"><div class="eyebrow">VILPE · Halloween</div>
-        <div class="narr" style="font-size:clamp(1.15rem,1.8vw,1.6rem);max-width:40ch">${esc(t('prologue'))}</div>
-        <div class="eyebrow">${esc(t('heroes'))} · <span class="num">${ps.length}</span></div>
-        <div class="chips">${ps.length?ps.map(p=>`<span class="chip"><span>${cls(p.c).ic}</span><span class="nm">${esc(p.n)}</span></span>`).join(''):`<span class="muted">${esc(t('noHeroes'))}</span>`}</div></div>
+        <div class="narr lobbytxt">${esc(tf('prologue'))}</div><div class="narr lobbytxt be-n">${esc(te('prologue'))}</div>
+        <div class="eyebrow">${bki('heroes')} · <span class="num">${ps.length}</span></div>
+        <div class="chips">${ps.length?ps.map(p=>`<span class="chip"><span>${cls(p.c).ic}</span><span class="nm">${esc(p.n)}</span></span>`).join(''):`<span class="muted">${bki('noHeroes')}</span>`}</div></div>
         ${art('lobby','sq')}</div>`;
       break;
     case 'intro':
-      h=`<div class="stage"><div class="left">${head}<div class="narr">${esc(L(sc).n)}</div></div><div class="right">${art('scene'+(S.scene+1),'sq')}</div></div>`;break;
+      h=`<div class="intro3"><div class="ihead">${head}</div>${twoCol(sc.fi.n,sc.en.n)}${art('scene'+(S.scene+1),'sq3')}</div>`;break;
     case 'vote':
-      h=`<div class="stage"><div class="left">${head}<div class="callout">${esc(t('voteOnPhones'))}</div>
-        <div class="bigcount"><span class="num" id="vCount"></span> <span>${esc(t('votesCast'))}</span> <span class="timer js-timer"></span></div><div class="alldone" id="allDone" hidden>${esc(t('allVoted'))}</div></div>
+      h=`<div class="stage"><div class="left">${head}<div class="callout">${bks('voteOnPhones')}</div>
+        <div class="bigcount"><span class="num" id="vCount"></span> <span>${bki('votesCast')}</span> <span class="timer js-timer"></span></div><div class="alldone" id="allDone" hidden>${bks('allVoted')}</div></div>
         <div class="right vrace">${art('scene'+(S.scene+1),'small')}${sc.o.map((o,i)=>`<div class="vrow vrow-l" data-i="${i}"><span class="vletter">${String.fromCharCode(65+i)}</span>
-          <div class="vmid"><span class="vttl">${esc(L(o).t)}</span><div class="vbar"><i style="width:0%"></i></div></div><span class="vcnt num">0</span></div>`).join('')}</div></div>`;break;
+          <div class="vmid"><span class="vttl">${BS(o.fi.t,o.en.t)}</span><div class="vbar"><i style="width:0%"></i></div></div><span class="vcnt num">0</span></div>`).join('')}</div></div>`;break;
     case 'roll':
       h=`<div class="stage"><div class="left">${head}${chosen()}
-        ${S.tie?`<div class="muted">${esc(t('tieBreak'))}</div>`:''}
-        <div class="callout">${esc(t('rollOnPhones'))}</div>
-        <div class="bigcount"><span class="num" id="rCount"></span> <span>${esc(t('rolledN'))}</span> <span class="timer js-timer"></span></div><div class="alldone" id="allDone" hidden>${esc(t('allRolled'))}</div></div>
+        ${S.tie?`<div class="muted">${bki('tieBreak')}</div>`:''}
+        <div class="callout">${bks('rollOnPhones')}</div>
+        <div class="bigcount"><span class="num" id="rCount"></span> <span>${bki('rolledN')}</span> <span class="timer js-timer"></span></div><div class="alldone" id="allDone" hidden>${bks('allRolled')}</div></div>
         <div class="right">${duelHtml(sc.dc,null,null)}<div class="dicefield" id="diceField"></div></div></div>`;break;
     case 'result':{
       const o=sc.o[S.winner],oc=S.outcome,tag=o.tag;
       if(drum){
-        h=`<div class="stage"><div class="left">${head}${chosen()}<div class="callout drumcall">${esc(t('fateRolling'))}</div></div>
-          <div class="right">${duelHtml(oc.dc,null,null)}<div class="dicefield">${(S.lastRolls||[]).map(x=>dieHtml({...x,n:x.n||t('guild')},tag,false)).join('')}</div></div></div>`;
-        break;
+        h=`<div class="stage"><div class="left">${head}${chosen()}</div><div class="right">${duelHtml(oc.dc,null,null)}</div></div>`;break;
       }
-      const chips=(S.lastRolls||[]).map(x=>`<span class="chip ${x.r===20?'c20':x.r===1?'c1':''}"><span>${x.c?cls(x.c).ic:'🎲'}</span><span class="nm">${esc(x.n||t('guild'))}</span><span class="r num">${x.tot}</span></span>`).join('');
-      h=`<div class="stage"><div class="left">${head}<div class="tier pop t-${oc.tier}" style="font-size:clamp(2.6rem,5vw,4.4rem)">${esc(t('tier_'+oc.tier))}</div>${oc.tier==='partial'?`<div class="muted" style="font-weight:700;font-size:clamp(1.05rem,1.5vw,1.4rem)">${esc(t('partialNote'))}</div>`:''}
-        <div class="narr">${esc(oc.tier==='fail'?L(o).l:L(o).w)}</div><div class="bigdeltas">${deltaHtml(oc.delta)}</div></div>
+      const fail=oc.tier==='fail';
+      const chips=(S.lastRolls||[]).map(x=>`<span class="chip ${x.r===20?'c20':x.r===1?'c1':''}"><span>${x.c?cls(x.c).ic:'🎲'}</span><span class="nm">${esc(x.n||tf('guild'))}</span><span class="r num">${x.tot}</span></span>`).join('');
+      h=`<div class="stage"><div class="left">${head}<div class="tier pop t-${oc.tier}">${BS(tf('tier_'+oc.tier),te('tier_'+oc.tier))}</div>${oc.tier==='partial'?`<div class="pnote">${bks('partialNote')}</div>`:''}
+        ${twoCol(fail?o.fi.l:o.fi.w,fail?o.en.l:o.en.w,'res')}<div class="bigdeltas">${deltaBi(oc.delta)}</div></div>
         <div class="right">${duel(oc)}
-        <div class="feats">${oc.best?`<div class="feat hero-feat"><span class="eyebrow">${esc(t('sceneHero'))}</span><span class="fw">${esc(oc.best.n)}</span><span class="fs num">${oc.best.t}</span></div>`:''}
-        ${oc.crit.length?`<div class="feat"><span class="eyebrow">${esc(t('crits'))}</span><div class="chips">${oc.crit.map(n=>`<span class="chip c20">${esc(n)}</span>`).join('')}</div></div>`:''}
-        ${oc.fum.length?`<div class="feat"><span class="eyebrow">${esc(t('fumbles'))}</span><div class="chips">${oc.fum.map(n=>`<span class="chip c1">${esc(n)}</span>`).join('')}</div></div>`:''}</div>
+        <div class="feats">${oc.best?`<div class="feat hero-feat"><span class="eyebrow">${bki('sceneHero')}</span><span class="fw">${esc(oc.best.n)}</span><span class="fs num">${oc.best.t}</span></div>`:''}
+        ${oc.crit.length?`<div class="feat"><span class="eyebrow">${bki('crits')}</span><div class="chips">${oc.crit.map(n=>`<span class="chip c20">${esc(n)}</span>`).join('')}</div></div>`:''}
+        ${oc.fum.length?`<div class="feat"><span class="eyebrow">${bki('fumbles')}</span><div class="chips">${oc.fum.map(n=>`<span class="chip c1">${esc(n)}</span>`).join('')}</div></div>`:''}</div>
         <div class="chips">${chips}</div></div></div>`;break;}
     case 'ending':{
       const e=ENDINGS[S.ending.id];
-      h=`<div class="stage"><div class="left" style="gap:18px"><div class="eyebrow">${esc(t('theEnd'))}</div>
-        <h2 class="stitle" style="font-size:clamp(3rem,6vw,5.2rem);color:var(--gold)">${esc(L(e).t)}</h2>${S.ending?`<div class="deltas"><span class="delta ${S.ending.v>=10000?'up':'down'}">${esc(t('endStats'))} ${fmt(S.res.v)} ${esc(t('ofOrder'))}</span><span class="delta">${esc(t('mood'))}: ${esc(moodWord(S.res.m))}</span><span class="delta">${esc(t('gold'))}: ${fmt(S.res.g)}</span></div>`:''}<div class="narr" style="font-size:clamp(1.1rem,1.55vw,1.45rem);max-width:56ch;line-height:1.5">${esc(L(e).n)}</div></div><div class="right">${art('ending-'+S.ending.id,'sq')}</div></div>`;break;}
+      h=`<div class="intro3 ending"><div class="ihead"><div class="eyebrow">${bki('theEnd')}</div>
+        <h2 class="stitle" style="color:var(--gold)">${BS(e.fi.t,e.en.t)}</h2>
+        <div class="deltas"><span class="delta ${S.ending.v>=10000?'up':'down'}">${fmtFi(S.res.v)} / 10 000 ${BI('tuuletinta','vents')}</span><span class="delta">${bki('mood')}: ${BI(tf(moodKey(S.res.m)),te(moodKey(S.res.m)))}</span><span class="delta">${bki('gold')}: ${fmtFi(S.res.g)}</span></div></div>
+        ${twoCol(e.fi.n,e.en.n,'end')}${art('ending-'+S.ending.id,'sq3')}</div>`;break;}
     case 'awards':{
       const e=ENDINGS[S.ending.id];
-      h=`<div style="display:grid;gap:22px"><div><div class="eyebrow">${esc(L(e).t)}</div><h2 class="stitle" style="font-size:clamp(2.6rem,5vw,4.4rem)">${esc(t('awards'))}</h2></div>
-        <div class="awards">${(S.awards||[]).map(a=>`<div class="award"><span class="t">${esc(t('aw_'+a.k))}</span><span class="w">${esc(a.n)}</span></div>`).join('')||`<span class="muted">—</span>`}</div></div>`;break;}
+      h=`<div style="display:grid;gap:22px"><div><div class="eyebrow">${BI(e.fi.t,e.en.t)}</div><h2 class="stitle">${bks('awards')}</h2></div>
+        <div class="awards">${(S.awards||[]).map(a=>`<div class="award"><span class="t">${bki('aw_'+a.k)}</span><span class="w">${esc(a.n)}</span></div>`).join('')||`<span class="muted">—</span>`}</div></div>`;break;}
   }
   const fadeSig=S.phase+S.scene+(drum?'d':'');
-  if(stage.dataset.fade!==fadeSig&&!(S.phase==='result'&&!drum&&stage.dataset.fade===S.phase+S.scene+'d')){stage.classList.remove('fade-in');void stage.offsetWidth;stage.classList.add('fade-in');}
+  if(stage.dataset.fade!==fadeSig){stage.classList.remove('fade-in');void stage.offsetWidth;stage.classList.add('fade-in');}
   stage.dataset.fade=fadeSig;stage.dataset.sig=sig;
   stage.innerHTML=h;
   if(live)live();
-  if(drum)startSpin(S.outcome.dc);
   renderDm();
 }
 let dmSig='';
 function renderDm(){
-  const bar=$('#dmBar');if(!S){dmSig='';bar.innerHTML=`<span class="tag">DM</span><span class="conn off">● ${esc(t('reconnecting'))}</span>`;return;}
-  const connTxt=`● ${connected?t('live'):t('reconnecting')} · ${(S.players||[]).length} ${t('onlineN')}`;
-  const sig=[S.runId,S.phase,S.scene,lang,armReset?1:0,drumming()?1:0].join('|');
+  const bar=$('#dmBar');if(!S){dmSig='';bar.innerHTML=`<span class="tag">DM</span><span class="conn off">● ${esc(tf('reconnecting'))}</span>`;return;}
+  const connTxt=`● ${connected?tf('live'):tf('reconnecting')} · ${(S.players||[]).length} ${tf('onlineN')}`;
+  const sig=[S.runId,S.phase,S.scene,armReset?1:0,drumming()?1:0].join('|');
   if(sig===dmSig){const c=$('#dmConn');if(c){c.className='conn '+(connected?'on':'off');c.textContent=connTxt;}return;}
   dmSig=sig;
   const labels={lobby:'begin',intro:'openVote',vote:'closeVote',roll:'reveal',result:S.scene<SCENES.length-1?'next':'finale',ending:'showAwards',awards:'newGame'};
   let mid='';
   if(false){}
-  else if(S.phase==='roll')mid=`<button class="btn ghost small" id="dmGuild" type="button">🎲 ${esc(t('guildDie'))}</button>`;
+  else if(S.phase==='roll')mid=`<button class="btn ghost small" id="dmGuild" type="button">🎲 ${esc(tf('guildDie'))}</button>`;
   bar.innerHTML=`<span class="tag">DM</span><span id="dmConn" class="conn ${connected?'on':'off'}">${esc(connTxt)}</span>${mid}<span class="grow"></span>
-    ${langSw()}<button class="btn ghost small" id="dmFs" type="button">${esc(t('fullscreen'))}</button>
-    ${S.phase!=='lobby'&&S.phase!=='awards'?`<button class="btn ghost small" id="dmReset" type="button">${esc(armReset?t('sure'):t('newGame'))}</button>`:''}
-    <button class="btn" id="dmNext" type="button"${drumming()?' disabled':''}>${esc(t(labels[S.phase]))}</button>`;
+    <button class="btn ghost small" id="dmFs" type="button">${esc(tf('fullscreen'))}</button>
+    ${S.phase!=='lobby'&&S.phase!=='awards'?`<button class="btn ghost small" id="dmReset" type="button">${esc(armReset?tf('sure'):tf('newGame'))}</button>`:''}
+    <button class="btn" id="dmNext" type="button"${drumming()?' disabled':''}>${esc(tf(labels[S.phase]))}</button>`;
   $('#dmNext').onclick=async e=>{const btn=e.currentTarget;btn.disabled=true;armReset=false;const r=await host('next',{from:S.runId+'|'+S.scene+'|'+S.phase});if(!r||!r.ok){btn.disabled=false;}setTimeout(()=>{if(btn.isConnected&&btn.disabled&&!drumming()){btn.disabled=false;}},3000);};
   $('#dmFs').onclick=()=>{try{const p=document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();p&&p.catch&&p.catch(()=>{});}catch(e){}};
   const rs=$('#dmReset');if(rs)rs.onclick=()=>{if(armReset){armReset=false;dmSig='';host('reset');}else{armReset=true;renderDm();setTimeout(()=>{if(armReset){armReset=false;renderDm();}},4000);}};
@@ -382,6 +394,8 @@ function initEmbers(){
   requestAnimationFrame(tick);
 }
 
-if(isHost){initEmbers();makeQr();setInterval(()=>fetch('/healthz').catch(()=>{}),4*60*1000);}
+// scale the TV layout (designed at 1920x1080) to fit any screen or display-scaling setting
+function fitTv(){const z=Math.min(innerWidth/1920,innerHeight/1080);document.documentElement.classList.add('tvfit');const h=$('#host');h.style.zoom=z;h.style.minHeight=(innerHeight/z)+'px';}
+if(isHost){fitTv();addEventListener('resize',fitTv);initEmbers();makeQr();setInterval(()=>fetch('/healthz').catch(()=>{}),4*60*1000);}
 render();connect();
 })();
