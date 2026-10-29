@@ -304,7 +304,7 @@ function renderHost(){
     case 'ending':{
       const e=ENDINGS[S.ending.id];
       h=`<div class="stage"><div class="left" style="gap:18px"><div class="eyebrow">${esc(t('theEnd'))}</div>
-        <h2 class="stitle" style="font-size:clamp(3rem,6vw,5.2rem);color:var(--gold)">${esc(L(e).t)}</h2>${S.ending?`<div class="deltas"><span class="delta ${S.ending.v>=10000?'up':'down'}">${esc(t('endStats'))} ${fmt(S.res.v)} ${esc(t('ofOrder'))}</span><span class="delta">${esc(t('mood'))}: ${esc(moodWord(S.res.m))}</span><span class="delta">${esc(t('gold'))}: ${fmt(S.res.g)}</span></div>`:''}<div class="narr" style="font-size:clamp(1.1rem,1.55vw,1.45rem);max-width:56ch;line-height:1.5">${esc(L(e).n)}</div></div><div class="right">${art('ending-'+(S.ending.id==='grumpy'?'messy':S.ending.id),'sq')}</div></div>`;break;}
+        <h2 class="stitle" style="font-size:clamp(3rem,6vw,5.2rem);color:var(--gold)">${esc(L(e).t)}</h2>${S.ending?`<div class="deltas"><span class="delta ${S.ending.v>=10000?'up':'down'}">${esc(t('endStats'))} ${fmt(S.res.v)} ${esc(t('ofOrder'))}</span><span class="delta">${esc(t('mood'))}: ${esc(moodWord(S.res.m))}</span><span class="delta">${esc(t('gold'))}: ${fmt(S.res.g)}</span></div>`:''}<div class="narr" style="font-size:clamp(1.1rem,1.55vw,1.45rem);max-width:56ch;line-height:1.5">${esc(L(e).n)}</div></div><div class="right">${art('ending-'+S.ending.id,'sq')}</div></div>`;break;}
     case 'awards':{
       const e=ENDINGS[S.ending.id];
       h=`<div style="display:grid;gap:22px"><div><div class="eyebrow">${esc(L(e).t)}</div><h2 class="stitle" style="font-size:clamp(2.6rem,5vw,4.4rem)">${esc(t('awards'))}</h2></div>
