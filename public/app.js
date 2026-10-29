@@ -38,7 +38,6 @@ function connect(){
   es.onmessage=ev=>{
     let d;try{d=JSON.parse(ev.data)}catch(e){return}
     const prev=S;S=d;localDeadline=Date.now()+(+d.left||0);
-    if(!isHost&&prev&&prev.phase==='roll'&&d.phase==='result'&&prev.scene===d.scene){pDrumUntil=Date.now()+(reduceMotion?600:2800);setTimeout(renderPlayer,(reduceMotion?600:2800)+40);}
     if(isHost)renderHost();
     else if(!rolling&&(!prev||structKey(prev)!==structKey(d)))renderPlayer();
     else updatePlayerLive();
@@ -238,10 +237,6 @@ function renderHost(){
   if(!S){$('#hostBand').innerHTML=`<div class="brand"><h1>${esc(t('title'))}</h1></div>`;$('#hostStage').innerHTML=`<div class="muted">${esc(t('waking'))}</div>`;renderDm();return;}
   const pk=S.runId+'|'+S.scene+'|'+S.phase;
   if(pk!==lastPhaseKey){
-    if(S.phase==='result'&&lastPhaseKey===S.runId+'|'+S.scene+'|roll'){
-      drumKey=S.runId+'|'+S.scene;drumUntil=Date.now()+(reduceMotion?600:2800);
-      setTimeout(renderHost,(reduceMotion?600:2800)+40);
-    }
     lastPhaseKey=pk;
   }
   setHeat(S.res.m);
