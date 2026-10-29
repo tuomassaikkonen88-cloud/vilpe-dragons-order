@@ -261,16 +261,17 @@ function renderHost(){
   let h='';
   switch(S.phase){
     case 'lobby':
-      h=`<div class="lobby"><div style="display:grid;gap:10px;justify-items:start">
+      h=`<div class="lobby3"><div style="display:grid;gap:10px;justify-items:start">
         <div class="qr">${qrData?`<img src="${qrData}" alt="QR code">`:''}</div>
         <b class="callout" style="font-size:1.6rem">${esc(t('scanJoin'))}</b><span class="muted">${esc(t('joinUrl'))}</span><span class="joinurl">${esc(location.host)}</span></div>
-        <div style="display:grid;gap:16px;min-width:0">${art('lobby','wide')}<div class="eyebrow">VILPE · Halloween</div>
-        <div class="narr" style="font-size:clamp(1.15rem,1.8vw,1.6rem);max-width:46ch">${esc(t('prologue'))}</div>
+        <div style="display:grid;gap:16px;min-width:0;align-content:start"><div class="eyebrow">VILPE · Halloween</div>
+        <div class="narr" style="font-size:clamp(1.15rem,1.8vw,1.6rem);max-width:40ch">${esc(t('prologue'))}</div>
         <div class="eyebrow">${esc(t('heroes'))} · <span class="num">${ps.length}</span></div>
-        <div class="chips">${ps.length?ps.map(p=>`<span class="chip"><span>${cls(p.c).ic}</span><span class="nm">${esc(p.n)}</span></span>`).join(''):`<span class="muted">${esc(t('noHeroes'))}</span>`}</div></div></div>`;
+        <div class="chips">${ps.length?ps.map(p=>`<span class="chip"><span>${cls(p.c).ic}</span><span class="nm">${esc(p.n)}</span></span>`).join(''):`<span class="muted">${esc(t('noHeroes'))}</span>`}</div></div>
+        ${art('lobby','sq')}</div>`;
       break;
     case 'intro':
-      h=`<div class="stage"><div class="left">${head}<div class="narr">${esc(L(sc).n)}</div></div><div class="right">${art('scene'+(S.scene+1))}</div></div>`;break;
+      h=`<div class="stage"><div class="left">${head}<div class="narr">${esc(L(sc).n)}</div></div><div class="right">${art('scene'+(S.scene+1),'sq')}</div></div>`;break;
     case 'vote':
       h=`<div class="stage"><div class="left">${head}<div class="callout">${esc(t('voteOnPhones'))}</div>
         <div class="bigcount"><span class="num" id="vCount"></span> <span>${esc(t('votesCast'))}</span> <span class="timer js-timer"></span></div><div class="alldone" id="allDone" hidden>${esc(t('allVoted'))}</div></div>

@@ -240,3 +240,10 @@ h1,h2,h3,.disp{font-family:var(--f-display);font-weight:700;letter-spacing:.01em
 .vletter{font-family:var(--f-display);font-size:clamp(2.4rem,3.6vw,3.4rem);line-height:1;color:var(--parch);min-width:1.1ch}
 .vrow-l.lead .vletter{color:var(--gold)}
 .vrow-l .vbar{height:clamp(30px,4.2vh,46px)}
+
+/* square Midjourney art */
+.art.sq{justify-self:end;width:min(100%,calc(100vh - 290px))}
+.art.sq img{aspect-ratio:1/1}
+.art.small img{aspect-ratio:5/2;object-position:50% 45%}
+.lobby3{display:grid;grid-template-columns:auto minmax(0,1fr) minmax(0,min(44vw,calc(100vh - 290px)));gap:32px;align-items:start}
+@media (max-width:1100px){.lobby3{grid-template-columns:1fr}.lobby3 .art.sq{justify-self:start}}
