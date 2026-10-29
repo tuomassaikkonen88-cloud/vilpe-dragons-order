@@ -1,0 +1,10 @@
+{
+  "name": "vilpe-dragons-order",
+  "version": "1.0.0",
+  "description": "The Dragon's Order: a live D&D-style Halloween party game for VILPE",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" },
+  "license": "UNLICENSED",
+  "private": true
+}
