@@ -251,4 +251,15 @@ h1,h2,h3,.disp{font-family:var(--f-display);font-weight:700;letter-spacing:.01em
 .vmid{display:grid;gap:8px;min-width:0}
 .vttl{font-weight:800;font-size:clamp(1.05rem,1.5vw,1.4rem);line-height:1.25}
 .vrow-l .vbar{height:clamp(22px,3vh,32px)}
-html,body{overflow-x:hidden}
+#host{overflow-x:clip}
+
+/* skill modifiers */
+.mod-up{color:var(--good)!important}.mod-down{color:var(--bad)!important}.mod-zero{color:var(--muted)!important}
+.pill.mod-up{border-color:rgba(140,196,126,.5);background:rgba(140,196,126,.12)}
+.pill.mod-down{border-color:rgba(232,106,95,.5);background:rgba(232,106,95,.12)}
+.sklist{display:grid;grid-template-columns:1fr;gap:1px;margin-top:4px;font-size:.82rem;line-height:1.3}
+.sklist.row{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:4px}
+.sk{color:var(--parch)!important;white-space:nowrap}
+.sk b{display:inline-block;min-width:2.1ch;text-align:right;margin-right:3px}
+.sk.mod-up b{color:var(--good)}.sk.mod-down b{color:var(--bad)}.sk.mod-zero b{color:var(--muted)}
+.die3 .dface em{font-size:.78rem}

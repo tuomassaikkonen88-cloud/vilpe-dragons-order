@@ -1,11 +1,12 @@
 (function(root){
+// Skill modifiers per class (D&D archetypes): one each of +3, +2, +1, 0, -1, -2
 const CLASSES=[
- {id:'paladin',tag:'might', ic:'🛡️',en:'Vent Paladin',fi:'Tuuletinpaladiini'},
- {id:'ranger', tag:'scout', ic:'🏹',en:'Roof Ranger',fi:'Kattosamooja'},
- {id:'bard',   tag:'charm', ic:'🎻',en:'Sales Bard',fi:'Myyntibardi'},
- {id:'rogue',  tag:'cunning',ic:'🗝️',en:'Logistics Rogue',fi:'Logistiikkaroisto'},
- {id:'wizard', tag:'arcane',ic:'🔮',en:'AI Wizard',fi:'Tekoälyvelho'},
- {id:'dwarf',  tag:'craft', ic:'⚒️',en:'Forge Dwarf',fi:'Pajakääpiö'}
+ {id:'paladin',tag:'might', ic:'🛡️',en:'Vent Paladin',fi:'Tuuletinpaladiini',sk:{might:3,charm:2,craft:1,scout:0,arcane:-1,cunning:-2}},
+ {id:'ranger', tag:'scout', ic:'🏹',en:'Roof Ranger',fi:'Kattosamooja',sk:{scout:3,might:2,cunning:1,craft:0,arcane:-1,charm:-2}},
+ {id:'bard',   tag:'charm', ic:'🎻',en:'Sales Bard',fi:'Myyntibardi',sk:{charm:3,cunning:2,arcane:1,scout:0,craft:-1,might:-2}},
+ {id:'rogue',  tag:'cunning',ic:'🗝️',en:'Logistics Rogue',fi:'Logistiikkaroisto',sk:{cunning:3,scout:2,charm:1,craft:0,might:-1,arcane:-2}},
+ {id:'wizard', tag:'arcane',ic:'🔮',en:'AI Wizard',fi:'Tekoälyvelho',sk:{arcane:3,cunning:2,craft:1,scout:0,charm:-1,might:-2}},
+ {id:'dwarf',  tag:'craft', ic:'⚒️',en:'Forge Dwarf',fi:'Pajakääpiö',sk:{craft:3,might:2,arcane:1,cunning:0,charm:-1,scout:-2}}
 ];
 const TAGS={might:{en:'Might',fi:'Voima'},scout:{en:'Scouting',fi:'Tiedustelu'},charm:{en:'Charm',fi:'Karisma'},cunning:{en:'Cunning',fi:'Oveluus'},arcane:{en:'Arcane',fi:'Taikuus'},craft:{en:'Craft',fi:'Käsityö'}};
 const SCENES=[
@@ -97,7 +98,7 @@ en:{title:"The Dragon's Order",sub:"A party adventure in the Grand Vent Forge of
  connecting:"Connecting to the guild hall…",noRoom:"Can't connect to the live game from here. Make sure you are signed in to claude.ai and opened the link the host shared with you.",
  yourName:"Your hero's name",namePh:"e.g. Sir Ventsalot",pickClass:"Pick your class",joinBtn:"Join the guild",bonusOn:"+3 on",
  waitDM:"Waiting for the Dungeon Master…",inLobby:"You're in the guild! Watch the big screen, the adventure starts soon.",change:"Change hero",
- listen:"Listen to the Dungeon Master…",voteNow:"Vote for the guild's plan",voted:"Vote cast. You can still change it.",yourBonus:"+3 for you!",
+ listen:"Listen to the Dungeon Master…",voteNow:"Vote for the guild's plan",voted:"Vote cast. You can still change it.",yourBonus:"for you",
  rollNow:"Roll for the guild!",tapRoll:"Tap the die",chosen:"The guild chose",rolled:"Your roll",bonus:"class bonus",nat20:"NATURAL 20! Legendary!",nat1:"NATURAL 1… the dragon saw that.",
  waitReveal:"Waiting for the DM to reveal the guild's fate…",groupAvg:"Guild average",dc:"Difficulty",
  tier_legendary:"Legendary success!",tier_success:"Success",tier_partial:"Partial success",partialNote:"Below the difficulty, but close: the plan only partly works. Reduced rewards.",tier_fail:"Failure",
@@ -113,13 +114,13 @@ en:{title:"The Dragon's Order",sub:"A party adventure in the Grand Vent Forge of
  begin:"Begin the adventure",openVote:"Open voting",closeVote:"Close voting",reveal:"Reveal the guild's fate",next:"Next scene",finale:"Final judgement",showAwards:"Show the awards",newGame:"New game",sure:"Sure? Click again",
  guildDie:"Roll a guild die",guild:"Guild die",hands:"Hands",fullscreen:"Fullscreen",live:"Live",offline:"Offline: hand votes and guild dice only",
  crits:"Natural 20s",fumbles:"Natural 1s",best:"Top roll",tieBreak:"A tie! The dice decided.",
- prologue:"Tonight the Grand Vent Forge of VILPE takes on its strangest customer yet. Create your hero on your phone: every class gets +3 on its own kind of challenge.",
+ prologue:"Tonight the Grand Vent Forge of VILPE takes on its strangest customer yet. Create your hero on your phone: every class has its own strengths and weaknesses, from +3 to −2.",
  tagHelp:"Bonus classes",allVoted:"Everyone has voted! Moving on…",allRolled:"Everyone has rolled! The guild's fate is sealed…",fateRolling:"The guild's fate is being decided…",questLog:"Quest log",sceneHero:"Hero of the scene",vsWord:"vs",tl_fail:"Failure",tl_partial:"Partial",tl_success:"Success",tl_legendary:"Legendary",nowPlaying:"Now",endStats:"Delivered",ofOrder:"of 10,000 vents",reconnecting:"Reconnecting…",inRoom:"connected",waking:"Waking up the forge… (can take up to a minute)",hostKeyBad:"Wrong DM key. Open the DM link with the correct ?key=",joinUrl:"or open",onlineN:"online",kick:"Remove"},
 fi:{title:"Lohikäärmeen tilaus",sub:"Juhla-seikkailu VILPEn Suuressa Tuuletinpajassa",run:"Pyöritä peliä (iso näyttö + pelinjohtaja)",join:"Liity pelaajaksi",
  connecting:"Yhdistetään kiltasaliin…",noRoom:"Live-peliin ei saada yhteyttä täältä. Varmista, että olet kirjautunut claude.ai:hin ja avasit linkin, jonka pelinjohtaja jakoi.",
  yourName:"Sankarisi nimi",namePh:"esim. Herra Tuuletin",pickClass:"Valitse hahmoluokka",joinBtn:"Liity kiltaan",bonusOn:"+3:",
  waitDM:"Odotetaan pelinjohtajaa…",inLobby:"Olet killassa! Seuraa isoa näyttöä, seikkailu alkaa pian.",change:"Vaihda sankari",
- listen:"Kuuntele pelinjohtajaa…",voteNow:"Äänestä killan suunnitelmaa",voted:"Ääni annettu. Voit vielä vaihtaa.",yourBonus:"+3 sinulle!",
+ listen:"Kuuntele pelinjohtajaa…",voteNow:"Äänestä killan suunnitelmaa",voted:"Ääni annettu. Voit vielä vaihtaa.",yourBonus:"sinulle",
  rollNow:"Heitä killan puolesta!",tapRoll:"Napauta noppaa",chosen:"Kilta valitsi",rolled:"Heittosi",bonus:"luokkabonus",nat20:"LUONNOLLINEN 20! Legendaarista!",nat1:"LUONNOLLINEN 1… lohikäärme näki tuon.",
  waitReveal:"Odotetaan, että pelinjohtaja paljastaa killan kohtalon…",groupAvg:"Killan keskiarvo",dc:"Vaikeus",
  tier_legendary:"Legendaarinen onnistuminen!",tier_success:"Onnistui",tier_partial:"Osittainen onnistuminen",partialNote:"Vaikeuden alle, mutta lähellä: suunnitelma onnistuu vain osittain. Pienemmät palkinnot.",tier_fail:"Epäonnistui",
@@ -134,15 +135,16 @@ fi:{title:"Lohikäärmeen tilaus",sub:"Juhla-seikkailu VILPEn Suuressa Tuuletinp
  begin:"Aloita seikkailu",openVote:"Avaa äänestys",closeVote:"Sulje äänestys",reveal:"Paljasta killan kohtalo",next:"Seuraava kohtaus",finale:"Lopullinen tuomio",showAwards:"Näytä palkinnot",newGame:"Uusi peli",sure:"Varmasti? Klikkaa uudelleen",
  guildDie:"Heitä killan noppa",guild:"Killan noppa",hands:"Kädet",fullscreen:"Koko näyttö",live:"Yhteys päällä",offline:"Ei yhteyttä: vain käsiäänestys ja killan nopat",
  crits:"Luonnolliset 20:t",fumbles:"Luonnolliset 1:t",best:"Paras heitto",tieBreak:"Tasapeli! Noppa ratkaisi.",
- prologue:"Tänä yönä VILPEn Suuri Tuuletinpaja kohtaa kaikkien aikojen oudoimman asiakkaansa. Luo sankarisi puhelimella: jokainen luokka saa +3 omanlaisiinsa haasteisiin.",
+ prologue:"Tänä yönä VILPEn Suuri Tuuletinpaja kohtaa kaikkien aikojen oudoimman asiakkaansa. Luo sankarisi puhelimella: jokaisella luokalla on omat vahvuutensa ja heikkoutensa, +3:sta −2:een.",
  tagHelp:"Bonusluokat",allVoted:"Kaikki ovat äänestäneet! Jatketaan…",allRolled:"Kaikki ovat heittäneet! Killan kohtalo sinetöityy…",fateRolling:"Killan kohtalo ratkeaa…",questLog:"Seikkailun kulku",sceneHero:"Kohtauksen sankari",vsWord:"vs",tl_fail:"Epäonnistui",tl_partial:"Osittain",tl_success:"Onnistui",tl_legendary:"Legendaarinen",nowPlaying:"Nyt",endStats:"Toimitettu",ofOrder:"/ 10 000 tuuletinta",reconnecting:"Yhdistetään uudelleen…",inRoom:"yhteydessä",waking:"Herätellään pajaa… (voi kestää minuutin)",hostKeyBad:"Väärä pelinjohtajan avain. Avaa DM-linkki oikealla ?key=-arvolla",joinUrl:"tai avaa",onlineN:"paikalla",kick:"Poista"}
 };
 
 
 const cls=id=>CLASSES.find(c=>c.id===id);
 const d20=()=>1+Math.floor(Math.random()*20);
-const rollTotal=(r,clsId,tag)=>r===1?0:r+(cls(clsId)&&cls(clsId).tag===tag?3:0)+(r===20?5:0);
+const modOf=(clsId,tag)=>{const c=cls(clsId);return c&&c.sk?(c.sk[tag]||0):0;};
+const rollTotal=(r,clsId,tag)=>r===1?0:Math.max(0,r+modOf(clsId,tag))+(r===20?5:0);
 const tierOf=(avg,dc)=>avg>=dc+5?'legendary':avg>=dc?'success':avg>=dc-3?'partial':'fail';
-const GAME={CLASSES,TAGS,SCENES,ENDINGS,T,cls,d20,rollTotal,tierOf};
+const GAME={CLASSES,TAGS,SCENES,ENDINGS,T,cls,d20,rollTotal,tierOf,modOf};
 if(typeof module!=='undefined'&&module.exports)module.exports=GAME;else root.GAME=GAME;
 })(this);

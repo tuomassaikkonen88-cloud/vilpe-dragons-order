@@ -1,5 +1,5 @@
 (function(){
-const {CLASSES,TAGS,SCENES,ENDINGS,T,cls,d20,rollTotal,tierOf}=window.GAME;
+const {CLASSES,TAGS,SCENES,ENDINGS,T,cls,d20,rollTotal,tierOf,modOf}=window.GAME;
 const reduceMotion=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
 const $=s=>document.querySelector(s);
 const ls={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
@@ -10,7 +10,10 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const fmt=n=>Math.round(n).toLocaleString(lang==='fi'?'fi-FI':'en-US');
 const moodWord=m=>t('mood'+Math.min(4,Math.floor(m/20.001)));
 const tagLabel=tag=>L(TAGS[tag]);
-const classesFor=tag=>CLASSES.filter(c=>c.tag===tag).map(c=>c.ic+' '+L(c)).join(', ');
+const sgn=n=>n>0?'+'+n:n<0?'−'+Math.abs(n):'±0';
+const modCls=n=>n>0?'mod-up':n<0?'mod-down':'mod-zero';
+const skillList=c=>Object.entries(c.sk).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span class="sk ${modCls(v)}"><b class="num">${sgn(v)}</b> ${esc(tagLabel(k))}</span>`).join('');
+const modChips=tag=>[...CLASSES].sort((a,b)=>modOf(b.id,tag)-modOf(a.id,tag)).map(c=>`<span class="pill ${modCls(modOf(c.id,tag))}">${c.ic} ${sgn(modOf(c.id,tag))}</span>`).join('');
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const langSw=()=>`<div class="lang" role="group" aria-label="Language"><button type="button" data-lang="fi" aria-pressed="${lang==='fi'}">FI</button><button type="button" data-lang="en" aria-pressed="${lang==='en'}">EN</button></div>`;
 function deltaHtml(d){
@@ -74,7 +77,7 @@ function renderPlayer(){
     h+=`<div class="card"><div class="muted">${esc(t('prologue'))}</div>
       <div class="field"><label for="pname">${esc(t('yourName'))}</label><input id="pname" maxlength="18" autocomplete="off" placeholder="${esc(t('namePh'))}" value="${esc(keepName||ls.get('vf_name',''))}"></div>
       <div class="field"><span style="font-weight:800">${esc(t('pickClass'))}</span><div class="classes">
-      ${CLASSES.map(c=>`<button type="button" class="cls" data-cls="${c.id}" aria-pressed="${pickClass===c.id}"><span class="ic">${c.ic}</span><b>${esc(L(c))}</b><small>${esc(t('bonusOn'))} ${esc(tagLabel(c.tag))}</small></button>`).join('')}
+      ${CLASSES.map(c=>`<button type="button" class="cls" data-cls="${c.id}" aria-pressed="${pickClass===c.id}"><span class="ic">${c.ic}</span><b>${esc(L(c))}</b><span class="sklist">${skillList(c)}</span></button>`).join('')}
       </div></div>
       <button class="btn" id="pjoin" type="button">${esc(t('joinBtn'))}</button><span id="pconn" class="conn center"></span></div>`;
     root.innerHTML=h;
@@ -90,7 +93,7 @@ function renderPlayer(){
     updatePlayerLive();return;
   }
   const c=cls(me.c);
-  h+=`<div class="hero"><span class="ic">${c.ic}</span><div><div class="nm">${esc(me.n)}</div><small class="muted">${esc(L(c))} · ${esc(t('bonusOn'))} ${esc(tagLabel(c.tag))}</small></div></div>`;
+  h+=`<div class="hero"><span class="ic">${c.ic}</span><div><div class="nm">${esc(me.n)}</div><small class="muted">${esc(L(c))}</small><div class="sklist row">${skillList(c)}</div></div></div>`;
   h+=playerBody(me,c);
   h+=`<div class="center" style="display:grid;gap:4px"><span id="pconn" class="conn"></span><button class="linkbtn" id="pchange" type="button">${esc(t('change'))}</button></div>`;
   root.innerHTML=h;
@@ -118,20 +121,20 @@ function playerBody(me,my){
     case 'intro':return `<div class="card">${head}<div class="narr">${esc(L(sc).n)}</div><div class="muted">${esc(t('listen'))}</div></div>`;
     case 'vote':
       return `<div class="card">${head}<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><b>${esc(t('voteNow'))}</b><span class="timer num js-timer"></span></div>
-       ${sc.o.map((o,i)=>`<button type="button" class="opt" data-vote="${i}" aria-pressed="${me.v===i}"><span class="ttl">${String.fromCharCode(65+i)}. ${esc(L(o).t)}</span><span class="meta"><span class="pill">${esc(tagLabel(o.tag))}</span>${my.tag===o.tag?`<span class="pill hot">${esc(t('yourBonus'))}</span>`:''}</span></button>`).join('')}
+       ${sc.o.map((o,i)=>`<button type="button" class="opt" data-vote="${i}" aria-pressed="${me.v===i}"><span class="ttl">${String.fromCharCode(65+i)}. ${esc(L(o).t)}</span><span class="meta"><span class="pill">${esc(tagLabel(o.tag))}</span><span class="pill ${modCls(modOf(me.c,o.tag))}">${sgn(modOf(me.c,o.tag))} ${esc(t('yourBonus'))}</span></span></button>`).join('')}
        ${me.v>=0?`<div class="muted center">${esc(t('voted'))}</div>`:''}</div>`;
     case 'roll':{
       const o=sc.o[S.winner];let inner;
       if(me.r==null){
         inner=`<div class="rollbig"><b>${esc(t('rollNow'))}</b><button type="button" class="die" id="prollbtn" aria-label="${esc(t('tapRoll'))}">20</button><span class="muted">${esc(t('tapRoll'))}</span><span class="timer num js-timer"></span></div>`;
       }else{
-        const b=my.tag===o.tag?3:0,tot=rollTotal(me.r,me.c,o.tag);
+        const b=modOf(me.c,o.tag),tot=rollTotal(me.r,me.c,o.tag);
         inner=`<div class="rollbig"><span class="muted">${esc(t('rolled'))}</span><div class="die ${me.r===20?'crit':me.r===1?'fum':''}">${me.r}</div>
-         <div class="mathline num">${me.r===1?'1 → 0':`${me.r}${b?` + ${b} ${esc(t('bonus'))}`:''}${me.r===20?' + 5':''} = ${tot}`}</div>
+         <div class="mathline num">${me.r===1?'1 → 0':`${me.r}${b?` ${b>0?'+':'−'} ${Math.abs(b)} (${esc(tagLabel(o.tag))})`:''}${me.r===20?' + 5':''} = ${tot}`}</div>
          ${me.r===20?`<b class="t-legendary">${esc(t('nat20'))}</b>`:me.r===1?`<b class="t-fail">${esc(t('nat1'))}</b>`:''}
          <div class="muted">${esc(t('waitReveal'))}</div></div>`;
       }
-      return `<div class="card">${head}<div><span class="muted">${esc(t('chosen'))}:</span> <b>${esc(L(o).t)}</b>${my.tag===o.tag?` <span class="pill hot">${esc(t('yourBonus'))}</span>`:''}</div>${inner}</div>`;}
+      return `<div class="card">${head}<div><span class="muted">${esc(t('chosen'))}:</span> <b>${esc(L(o).t)}</b> <span class="pill ${modCls(modOf(me.c,o.tag))}">${esc(tagLabel(o.tag))} ${sgn(modOf(me.c,o.tag))}</span></div>${inner}</div>`;}
     case 'result':{
       const o=sc.o[S.winner],oc=S.outcome||{};
       if(Date.now()<pDrumUntil)return `<div class="card">${head}<div class="rollbig"><div class="die rolling" aria-hidden="true">?</div><b>${esc(t('fateRolling'))}</b></div></div>`;
@@ -163,7 +166,7 @@ function optCards(sc,mode){
   return sc.o.map((o,i)=>{
     const st=(mode==='vote'||mode==='intro')?'':(i===S.winner?'win':'lose');
     return `<div class="hopt ${st}"><div class="top"><span class="ttl">${String.fromCharCode(65+i)}. ${esc(L(o).t)}</span>${mode!=='intro'?`<span class="cnt num">${tl[i]}</span>`:''}</div>
-     <div class="chips"><span class="pill">${esc(tagLabel(o.tag))}</span><span class="pill hot">+3 ${esc(classesFor(o.tag))}</span></div></div>`;
+     <div class="chips"><span class="pill">${esc(tagLabel(o.tag))}</span>${modChips(o.tag)}</div></div>`;
   }).join('');
 }
 const art=(name,cls)=>`<figure class="art ${cls||''}"><img src="/img/${name}.jpg" alt="" onerror="this.closest('figure').hidden=true"></figure>`;
@@ -199,9 +202,9 @@ function liveRolls(){
   return{rs,avg,dc:sc.dc,tag:o.tag};
 }
 function dieHtml(x,tag,drop){
-  const bonus=x.c&&cls(x.c).tag===tag;
+  const md=x.c&&x.r!==1?modOf(x.c,tag):0;
   return `<div class="die3${drop?' drop':''}${x.r===20?' crit':x.r===1?' fum':''}" data-k="${esc(x.k||'')}" style="--rot:${(Math.random()*36-18).toFixed(1)}deg">
-    <div class="dface"><span class="num">${x.r}</span>${bonus?'<em>+3</em>':''}</div><div class="dname">${x.c?cls(x.c).ic+' ':'🎲 '}${esc(x.n)}</div></div>`;
+    <div class="dface"><span class="num">${x.r}</span>${md?`<em>${sgn(md)}</em>`:''}</div><div class="dname">${x.c?cls(x.c).ic+' ':'🎲 '}${esc(x.n)}</div></div>`;
 }
 function updateVote(){
   const tl=S.tally||[0,0,0],tot=tl.reduce((a,b)=>a+b,0),max=Math.max(...tl);
@@ -253,7 +256,7 @@ function renderHost(){
   const sc=SCENES[S.scene],ps=S.players||[],drum=drumming();
   const head=`<div class="scene-no">${esc(t('scene'))} ${S.scene+1}</div><h2 class="stitle">${esc(L(sc).t)}</h2>`;
   const chosen=()=>{const o=sc.o[S.winner];return `<div class="hopt win"><div class="top"><span class="ttl">${esc(t('chosen'))}: ${esc(L(o).t)}</span></div>
-        <div class="chips"><span class="pill">${esc(tagLabel(o.tag))}</span><span class="pill hot">+3 ${esc(classesFor(o.tag))}</span></div></div>`;};
+        <div class="chips"><span class="pill">${esc(tagLabel(o.tag))}</span>${modChips(o.tag)}</div></div>`;};
   const stage=$('#hostStage');
   const sig=[S.runId,S.phase,S.scene,S.winner,lang,drum?'drum':''].join('|');
   const live={vote:updateVote,roll:updateRoll}[S.phase];
