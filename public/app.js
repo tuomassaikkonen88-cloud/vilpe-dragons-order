@@ -1,5 +1,6 @@
 (function(){
-const {CLASSES,TAGS,SCENES,ENDINGS,T,cls,d20,rollTotal}=window.GAME;
+const {CLASSES,TAGS,SCENES,ENDINGS,T,cls,d20,rollTotal,tierOf}=window.GAME;
+const reduceMotion=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
 const $=s=>document.querySelector(s);
 const ls={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 let lang=ls.get('vf_lang',(navigator.language||'fi').toLowerCase().startsWith('fi')?'fi':'en'); if(lang!=='fi'&&lang!=='en')lang='fi';
@@ -37,6 +38,7 @@ function connect(){
   es.onmessage=ev=>{
     let d;try{d=JSON.parse(ev.data)}catch(e){return}
     const prev=S;S=d;localDeadline=Date.now()+(+d.left||0);
+    if(!isHost&&prev&&prev.phase==='roll'&&d.phase==='result'&&prev.scene===d.scene){pDrumUntil=Date.now()+(reduceMotion?600:2800);setTimeout(renderPlayer,(reduceMotion?600:2800)+40);}
     if(isHost)renderHost();
     else if(!rolling&&(!prev||structKey(prev)!==structKey(d)))renderPlayer();
     else updatePlayerLive();
@@ -57,7 +59,7 @@ setInterval(()=>{
 },500);
 
 /* ---------------- player ---------------- */
-let pickClass=null,rolling=false;
+let pickClass=null,rolling=false,pDrumUntil=0;
 const structKey=d=>[d.runId,d.phase,d.scene,d.winner,d.me?d.me.n+d.me.c+d.me.v+(d.me.r??''):'-',d.awards?1:0].join('|');
 function updatePlayerLive(){const el=document.getElementById('pconn');if(el){el.className='conn '+(connected?'on':'off');el.textContent='● '+(connected?t('live'):t('reconnecting'));}}
 function renderPlayer(){
@@ -133,6 +135,7 @@ function playerBody(me,my){
       return `<div class="card">${head}<div><span class="muted">${esc(t('chosen'))}:</span> <b>${esc(L(o).t)}</b>${my.tag===o.tag?` <span class="pill hot">${esc(t('yourBonus'))}</span>`:''}</div>${inner}</div>`;}
     case 'result':{
       const o=sc.o[S.winner],oc=S.outcome||{};
+      if(Date.now()<pDrumUntil)return `<div class="card">${head}<div class="rollbig"><div class="die rolling" aria-hidden="true">?</div><b>${esc(t('fateRolling'))}</b></div></div>`;
       return `<div class="card">${head}<div class="tier t-${oc.tier}">${esc(t('tier_'+oc.tier))}</div>${oc.tier==='partial'?`<div class="muted" style="font-weight:700">${esc(t('partialNote'))}</div>`:''}
        <div class="narr">${esc(oc.tier==='fail'?L(o).l:L(o).w)}</div>${deltaHtml(oc.delta)}
        <div class="muted num">${esc(t('groupAvg'))}: ${oc.avg} · ${esc(t('dc'))} ${oc.dc}</div></div>`;}
@@ -164,23 +167,84 @@ function optCards(sc,mode){
      <div class="chips"><span class="pill">${esc(tagLabel(o.tag))}</span><span class="pill hot">+3 ${esc(classesFor(o.tag))}</span></div></div>`;
   }).join('');
 }
-function duel(oc){
-  const max=Math.max(25,oc.dc+9),pct=v=>clamp(v/max*100,0,100);
-  const zones=[['fail',0,oc.dc-3],['partial',oc.dc-3,oc.dc],['success',oc.dc,oc.dc+5],['legendary',oc.dc+5,max]];
-  return `<div class="duel"><div class="duel-row">
-    <div class="dn"><div class="eyebrow">${esc(t('groupAvg'))}</div><div class="n num t-${oc.tier}">${oc.avg}</div></div>
+function duelHtml(dc,avg,tier){
+  const max=Math.max(25,dc+9),pct=v=>clamp(v/max*100,0,100);
+  const zones=[['fail',0,dc-3],['partial',dc-3,dc],['success',dc,dc+5],['legendary',dc+5,max]];
+  const has=avg!=null;
+  return `<div class="duel" data-max="${max}"><div class="duel-row">
+    <div class="dn"><div class="eyebrow">${esc(t('groupAvg'))}</div><div class="n num ${has?'t-'+tier:''}" id="dAvg">${has?avg:'–'}</div></div>
     <div class="vsx">${esc(t('vsWord'))}</div>
-    <div class="dn"><div class="eyebrow">${esc(t('dc'))}</div><div class="n num">${oc.dc}</div></div></div>
-    <div class="track" role="img" aria-label="${esc(t('groupAvg'))} ${oc.avg}, ${esc(t('dc'))} ${oc.dc}">
-      ${zones.map(([k,a,b])=>`<div class="zone z-${k}${k===oc.tier?' on':''}" style="left:${pct(a)}%;width:${pct(b)-pct(a)}%"><span>${esc(t('tl_'+k))}</span></div>`).join('')}
-      <div class="dcline" style="left:${pct(oc.dc)}%"></div>
-      <div class="marker" style="left:${pct(oc.avg)}%"><b class="num">${oc.avg}</b></div>
+    <div class="dn"><div class="eyebrow">${esc(t('dc'))}</div><div class="n num">${dc}</div></div></div>
+    <div class="track" role="img" aria-label="${esc(t('groupAvg'))} ${has?avg:''}, ${esc(t('dc'))} ${dc}">
+      ${zones.map(([k,a,b])=>`<div class="zone z-${k}${k===tier?' on':''}" data-k="${k}" style="left:${pct(a)}%;width:${pct(b)-pct(a)}%"><span>${esc(t('tl_'+k))}</span></div>`).join('')}
+      <div class="dcline" style="left:${pct(dc)}%"></div>
+      <div class="marker" id="dMarker" style="left:${has?pct(avg):0}%;opacity:${has?1:0}"><b class="num">${has?avg:''}</b></div>
     </div></div>`;
+}
+const duel=oc=>duelHtml(oc.dc,oc.avg,oc.tier);
+function setDuel(avg,dc){
+  const n=$('#dAvg'),m=$('#dMarker'),d=document.querySelector('.duel');if(!n||!m||!d)return;
+  const max=+d.dataset.max;
+  if(avg==null){n.textContent='–';n.className='n num';m.style.opacity=0;document.querySelectorAll('.track .zone').forEach(z=>z.classList.remove('on'));return;}
+  const tier=tierOf(avg,dc);
+  n.textContent=avg;n.className='n num t-'+tier;m.style.opacity=1;m.style.left=clamp(avg/max*100,0,100)+'%';m.querySelector('b').textContent=avg;
+  document.querySelectorAll('.track .zone').forEach(z=>z.classList.toggle('on',z.dataset.k===tier));
+}
+function liveRolls(){
+  const sc=SCENES[S.scene],o=sc.o[S.winner],rs=[];
+  (S.players||[]).forEach(p=>{if(p.r!=null)rs.push({k:'p:'+p.n+'|'+p.c,n:p.n,c:p.c,r:p.r});});
+  (S.guild||[]).forEach((g,i)=>rs.push({k:'g:'+i,n:t('guild'),c:null,r:g}));
+  rs.forEach(x=>x.tot=rollTotal(x.r,x.c,o.tag));
+  const avg=rs.length?Math.round(rs.reduce((a,x)=>a+x.tot,0)/rs.length*10)/10:null;
+  return{rs,avg,dc:sc.dc,tag:o.tag};
+}
+function dieHtml(x,tag,drop){
+  const bonus=x.c&&cls(x.c).tag===tag;
+  return `<div class="die3${drop?' drop':''}${x.r===20?' crit':x.r===1?' fum':''}" data-k="${esc(x.k||'')}" style="--rot:${(Math.random()*36-18).toFixed(1)}deg">
+    <div class="dface"><span class="num">${x.r}</span>${bonus?'<em>+3</em>':''}</div><div class="dname">${x.c?cls(x.c).ic+' ':'🎲 '}${esc(x.n)}</div></div>`;
+}
+function updateVote(){
+  const tl=S.tally||[0,0,0],tot=tl.reduce((a,b)=>a+b,0),max=Math.max(...tl);
+  document.querySelectorAll('.vrow').forEach(r=>{const i=+r.dataset.i;
+    r.querySelector('.vcnt').textContent=tl[i];
+    r.querySelector('.vbar i').style.width=(tot?tl[i]/tot*100:0)+'%';
+    r.classList.toggle('lead',tot>0&&tl[i]===max);});
+  const ps=S.players||[],el=$('#vCount');if(el)el.textContent=ps.filter(p=>p.voted).length+' / '+ps.length;
+}
+function updateRoll(){
+  const {rs,avg,dc,tag}=liveRolls();setDuel(avg,dc);
+  const f=$('#diceField');
+  if(f){const have=new Set([...f.children].map(c=>c.dataset.k));
+    rs.forEach(x=>{if(have.has(x.k))return;f.insertAdjacentHTML('beforeend',dieHtml(x,tag,true));});}
+  const ps=S.players||[],el=$('#rCount');if(el)el.textContent=ps.filter(p=>p.r!=null).length+' / '+ps.length;
+}
+/* drumroll between rolling and the result */
+let lastPhaseKey='',drumKey='',drumUntil=0,drumTimer=null;
+const drumming=()=>S&&S.phase==='result'&&drumKey===S.runId+'|'+S.scene&&Date.now()<drumUntil;
+function startSpin(dc){
+  clearInterval(drumTimer);
+  drumTimer=setInterval(()=>{
+    if(!drumming()){clearInterval(drumTimer);return;}
+    const left=drumUntil-Date.now();
+    const spread=left>900?9:left>400?5:2;
+    const target=S.outcome.avg;
+    const v=Math.round(clamp(target+(Math.random()*2-1)*spread,1,28)*10)/10;
+    setDuel(v,dc);
+  },90);
 }
 function renderHost(){
   $('#host').hidden=false;
   if(badKey||!hostKey){$('#hostBand').innerHTML='';$('#dmBar').innerHTML='';$('#hostStage').innerHTML=`<div class="err">${esc(t('hostKeyBad'))}</div>`;return;}
   if(!S){$('#hostBand').innerHTML=`<div class="brand"><h1>${esc(t('title'))}</h1></div>`;$('#hostStage').innerHTML=`<div class="muted">${esc(t('waking'))}</div>`;renderDm();return;}
+  const pk=S.runId+'|'+S.scene+'|'+S.phase;
+  if(pk!==lastPhaseKey){
+    if(S.phase==='result'&&lastPhaseKey===S.runId+'|'+S.scene+'|roll'){
+      drumKey=S.runId+'|'+S.scene;drumUntil=Date.now()+(reduceMotion?600:2800);
+      setTimeout(renderHost,(reduceMotion?600:2800)+40);
+    }
+    lastPhaseKey=pk;
+  }
+  setHeat(S.res.m);
   const r=S.res;
   $('#hostBand').innerHTML=`<div class="brand"><h1>${esc(t('title'))}</h1><div class="sub">${esc(t('sub'))}</div></div>
    <div class="score">
@@ -188,8 +252,14 @@ function renderHost(){
     <div class="meter"><span class="lbl">${esc(t('vents'))}</span><span class="val num">${fmt(r.v)} <small class="muted" style="font-size:1rem">${esc(t('of'))} 10 000</small></span><div class="bar"><i style="width:${clamp(r.v/100,0,100)}%"></i></div></div>
     <div class="meter"><span class="lbl">${esc(t('mood'))}</span><span class="val">${esc(moodWord(r.m))}</span><div class="bar mood"><i style="width:${r.m}%"></i></div></div>
    </div>`;
-  const sc=SCENES[S.scene],ps=S.players||[];
-  const head=`<div class="scene-no">${esc(t('scene'))} ${S.scene+1}</div><h2>${esc(L(sc).t)}</h2>`;
+  const sc=SCENES[S.scene],ps=S.players||[],drum=drumming();
+  const head=`<div class="scene-no">${esc(t('scene'))} ${S.scene+1}</div><h2 class="stitle">${esc(L(sc).t)}</h2>`;
+  const chosen=()=>{const o=sc.o[S.winner];return `<div class="hopt win"><div class="top"><span class="ttl">${esc(t('chosen'))}: ${esc(L(o).t)}</span></div>
+        <div class="chips"><span class="pill">${esc(tagLabel(o.tag))}</span><span class="pill hot">+3 ${esc(classesFor(o.tag))}</span></div></div>`;};
+  const stage=$('#hostStage');
+  const sig=[S.runId,S.phase,S.scene,S.winner,lang,drum?'drum':''].join('|');
+  const live={vote:updateVote,roll:updateRoll}[S.phase];
+  if((live||drum)&&stage.dataset.sig===sig){if(live)live();renderDm();return;}
   let h='';
   switch(S.phase){
     case 'lobby':
@@ -203,24 +273,27 @@ function renderHost(){
       break;
     case 'intro':
       h=`<div class="stage"><div class="left">${head}<div class="narr">${esc(L(sc).n)}</div></div><div class="right">${optCards(sc,'intro')}</div></div>`;break;
-    case 'vote':{
-      const n=ps.filter(p=>p.voted).length;
+    case 'vote':
       h=`<div class="stage"><div class="left">${head}<div class="callout">${esc(t('voteOnPhones'))}</div>
-        <div class="muted num" style="font-size:1.2rem">${n} / ${ps.length} ${esc(t('votesCast'))} · <span class="timer js-timer"></span></div></div><div class="right">${optCards(sc,'vote')}</div></div>`;break;}
-    case 'roll':{
-      const o=sc.o[S.winner];const rolled=ps.filter(p=>p.r!=null).length;
-      const chips=ps.map(p=>`<span class="chip ${p.r==null?'wait':p.r===20?'c20':p.r===1?'c1':''}"><span>${cls(p.c).ic}</span><span class="nm">${esc(p.n)}</span><span class="r num">${p.r==null?'·':p.r}</span></span>`).join('')
-        +(S.guild||[]).map(g=>`<span class="chip ${g===20?'c20':g===1?'c1':''}"><span>🎲</span><span class="nm">${esc(t('guild'))}</span><span class="r num">${g}</span></span>`).join('');
-      h=`<div class="stage"><div class="left">${head}<div class="hopt win"><div class="top"><span class="ttl">${esc(t('chosen'))}: ${esc(L(o).t)}</span></div>
-        <div class="chips"><span class="pill">${esc(tagLabel(o.tag))}</span><span class="pill hot">+3 ${esc(classesFor(o.tag))}</span></div></div>
+        <div class="bigcount"><span class="num" id="vCount"></span> <span>${esc(t('votesCast'))}</span> <span class="timer js-timer"></span></div></div>
+        <div class="right vrace">${sc.o.map((o,i)=>`<div class="vrow" data-i="${i}"><div class="vtop"><span class="ttl">${String.fromCharCode(65+i)}. ${esc(L(o).t)}</span><span class="vcnt num">0</span></div>
+          <div class="chips"><span class="pill">${esc(tagLabel(o.tag))}</span><span class="pill hot">+3 ${esc(classesFor(o.tag))}</span></div>
+          <div class="vbar"><i style="width:0%"></i></div></div>`).join('')}</div></div>`;break;
+    case 'roll':
+      h=`<div class="stage"><div class="left">${head}${chosen()}
         ${S.tie?`<div class="muted">${esc(t('tieBreak'))}</div>`:''}
         <div class="callout">${esc(t('rollOnPhones'))}</div>
-        <div class="muted num" style="font-size:1.2rem">${rolled} / ${ps.length} ${esc(t('rolledN'))} · ${esc(t('dc'))} ${sc.dc} · <span class="timer js-timer"></span></div></div>
-        <div class="right"><div class="chips">${chips}</div></div></div>`;break;}
+        <div class="bigcount"><span class="num" id="rCount"></span> <span>${esc(t('rolledN'))}</span> <span class="timer js-timer"></span></div></div>
+        <div class="right">${duelHtml(sc.dc,null,null)}<div class="dicefield" id="diceField"></div></div></div>`;break;
     case 'result':{
-      const o=sc.o[S.winner],oc=S.outcome;
+      const o=sc.o[S.winner],oc=S.outcome,tag=o.tag;
+      if(drum){
+        h=`<div class="stage"><div class="left">${head}${chosen()}<div class="callout drumcall">${esc(t('fateRolling'))}</div></div>
+          <div class="right">${duelHtml(oc.dc,null,null)}<div class="dicefield">${(S.lastRolls||[]).map(x=>dieHtml({...x,n:x.n||t('guild')},tag,false)).join('')}</div></div></div>`;
+        break;
+      }
       const chips=(S.lastRolls||[]).map(x=>`<span class="chip ${x.r===20?'c20':x.r===1?'c1':''}"><span>${x.c?cls(x.c).ic:'🎲'}</span><span class="nm">${esc(x.n||t('guild'))}</span><span class="r num">${x.tot}</span></span>`).join('');
-      h=`<div class="stage"><div class="left">${head}<div class="tier t-${oc.tier}" style="font-size:clamp(2.6rem,5vw,4.4rem)">${esc(t('tier_'+oc.tier))}</div>${oc.tier==='partial'?`<div class="muted" style="font-weight:700;font-size:clamp(1.05rem,1.5vw,1.4rem)">${esc(t('partialNote'))}</div>`:''}
+      h=`<div class="stage"><div class="left">${head}<div class="tier pop t-${oc.tier}" style="font-size:clamp(2.6rem,5vw,4.4rem)">${esc(t('tier_'+oc.tier))}</div>${oc.tier==='partial'?`<div class="muted" style="font-weight:700;font-size:clamp(1.05rem,1.5vw,1.4rem)">${esc(t('partialNote'))}</div>`:''}
         <div class="narr">${esc(oc.tier==='fail'?L(o).l:L(o).w)}</div><div class="bigdeltas">${deltaHtml(oc.delta)}</div></div>
         <div class="right">${duel(oc)}
         <div class="feats">${oc.best?`<div class="feat hero-feat"><span class="eyebrow">${esc(t('sceneHero'))}</span><span class="fw">${esc(oc.best.n)}</span><span class="fs num">${oc.best.t}</span></div>`:''}
@@ -230,15 +303,19 @@ function renderHost(){
     case 'ending':{
       const e=ENDINGS[S.ending.id];
       h=`<div style="display:grid;gap:18px;max-width:900px"><div class="eyebrow">${esc(t('theEnd'))}</div>
-        <h2 style="font-size:clamp(3rem,6vw,5.2rem);color:var(--gold)">${esc(L(e).t)}</h2>${S.ending?`<div class="deltas"><span class="delta ${S.ending.v>=10000?'up':'down'}">${esc(t('endStats'))} ${fmt(S.res.v)} ${esc(t('ofOrder'))}</span><span class="delta">${esc(t('mood'))}: ${esc(moodWord(S.res.m))}</span><span class="delta">${esc(t('gold'))}: ${fmt(S.res.g)}</span></div>`:''}<div class="narr" style="font-size:clamp(1.1rem,1.65vw,1.55rem);max-width:62ch;line-height:1.5">${esc(L(e).n)}</div></div>`;break;}
+        <h2 class="stitle" style="font-size:clamp(3rem,6vw,5.2rem);color:var(--gold)">${esc(L(e).t)}</h2>${S.ending?`<div class="deltas"><span class="delta ${S.ending.v>=10000?'up':'down'}">${esc(t('endStats'))} ${fmt(S.res.v)} ${esc(t('ofOrder'))}</span><span class="delta">${esc(t('mood'))}: ${esc(moodWord(S.res.m))}</span><span class="delta">${esc(t('gold'))}: ${fmt(S.res.g)}</span></div>`:''}<div class="narr" style="font-size:clamp(1.1rem,1.65vw,1.55rem);max-width:62ch;line-height:1.5">${esc(L(e).n)}</div></div>`;break;}
     case 'awards':{
       const e=ENDINGS[S.ending.id];
-      h=`<div style="display:grid;gap:22px"><div><div class="eyebrow">${esc(L(e).t)}</div><h2 style="font-size:clamp(2.6rem,5vw,4.4rem)">${esc(t('awards'))}</h2></div>
+      h=`<div style="display:grid;gap:22px"><div><div class="eyebrow">${esc(L(e).t)}</div><h2 class="stitle" style="font-size:clamp(2.6rem,5vw,4.4rem)">${esc(t('awards'))}</h2></div>
         <div class="awards">${(S.awards||[]).map(a=>`<div class="award"><span class="t">${esc(t('aw_'+a.k))}</span><span class="w">${esc(a.n)}</span></div>`).join('')||`<span class="muted">—</span>`}</div></div>`;break;}
   }
-  const stage=$('#hostStage');const sig=S.phase+S.scene;
-  if(stage.dataset.sig!==sig){stage.dataset.sig=sig;stage.classList.remove('fade-in');void stage.offsetWidth;stage.classList.add('fade-in');}
-  stage.innerHTML=h;renderDm();
+  const fadeSig=S.phase+S.scene+(drum?'d':'');
+  if(stage.dataset.fade!==fadeSig&&!(S.phase==='result'&&!drum&&stage.dataset.fade===S.phase+S.scene+'d')){stage.classList.remove('fade-in');void stage.offsetWidth;stage.classList.add('fade-in');}
+  stage.dataset.fade=fadeSig;stage.dataset.sig=sig;
+  stage.innerHTML=h;
+  if(live)live();
+  if(drum)startSpin(S.outcome.dc);
+  renderDm();
 }
 function renderDm(){
   const bar=$('#dmBar');if(!S){bar.innerHTML=`<span class="tag">DM</span><span class="conn off">● ${esc(t('reconnecting'))}</span>`;return;}
@@ -249,13 +326,56 @@ function renderDm(){
   bar.innerHTML=`<span class="tag">DM</span><span class="conn ${connected?'on':'off'}">● ${esc(connected?t('live'):t('reconnecting'))} · ${(S.players||[]).length} ${esc(t('onlineN'))}</span>${mid}<span class="grow"></span>
     ${langSw()}<button class="btn ghost small" id="dmFs" type="button">${esc(t('fullscreen'))}</button>
     ${S.phase!=='lobby'&&S.phase!=='awards'?`<button class="btn ghost small" id="dmReset" type="button">${esc(armReset?t('sure'):t('newGame'))}</button>`:''}
-    <button class="btn" id="dmNext" type="button">${esc(t(labels[S.phase]))}</button>`;
+    <button class="btn" id="dmNext" type="button"${drumming()?' disabled':''}>${esc(t(labels[S.phase]))}</button>`;
   $('#dmNext').onclick=async e=>{e.target.disabled=true;armReset=false;await host('next');};
   $('#dmFs').onclick=()=>{try{const p=document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();p&&p.catch&&p.catch(()=>{});}catch(e){}};
   const rs=$('#dmReset');if(rs)rs.onclick=()=>{if(armReset){armReset=false;host('reset');}else{armReset=true;renderDm();setTimeout(()=>{if(armReset){armReset=false;renderDm();}},4000);}};
   const gd=$('#dmGuild');if(gd)gd.onclick=()=>host('guild');
 }
 
-if(isHost){makeQr();setInterval(()=>fetch('/healthz').catch(()=>{}),4*60*1000);}
+
+/* ---------------- atmosphere: embers + glow driven by the dragon's mood ---------------- */
+let heat=0.5,heatShown=0.5,emberCv=null,emberCtx=null,embersArr=[];
+function setHeat(m){heat=Math.pow(clamp((100-m)/100,0,1),1.15);}
+function initEmbers(){
+  emberCv=document.createElement('canvas');emberCv.id='embers';emberCv.setAttribute('aria-hidden','true');
+  const g1=document.createElement('div');g1.className='glow glow-top';const g2=document.createElement('div');g2.className='glow glow-floor';
+  document.body.prepend(g2);document.body.prepend(g1);document.body.prepend(emberCv);
+  emberCtx=emberCv.getContext('2d');
+  const size=()=>{const d=Math.min(2,window.devicePixelRatio||1);emberCv.width=innerWidth*d;emberCv.height=innerHeight*d;emberCv.style.width=innerWidth+'px';emberCv.style.height=innerHeight+'px';emberCtx.setTransform(d,0,0,d,0,0);};
+  size();addEventListener('resize',size);
+  const spawn=(anyY)=>({x:Math.random()*innerWidth,y:anyY?Math.random()*innerHeight:innerHeight+10,
+    vy:-(0.25+Math.random()*0.9),vx:(Math.random()-.5)*0.3,r:0.8+Math.random()*2.4,ph:Math.random()*6.28,life:1,
+    hue:Math.random()});
+  let last=performance.now();
+  const tick=now=>{
+    const dt=Math.min(50,now-last)/16.7;last=now;
+    heatShown+=(heat-heatShown)*0.02*dt;
+    const hs=heatShown;
+    document.documentElement.style.setProperty('--heat',hs.toFixed(3));
+    const target=Math.round((reduceMotion?0.25:1)*(12+190*hs));
+    const prime=embersArr.length===0;
+    while(embersArr.length<target)embersArr.push(spawn(prime));
+    if(embersArr.length>target)embersArr.length=Math.max(target,embersArr.length-2);
+    const c=emberCtx;c.clearRect(0,0,innerWidth,innerHeight);c.globalCompositeOperation='lighter';
+    const speed=(reduceMotion?0.35:1)*(0.7+hs*1.3);
+    for(let i=0;i<embersArr.length;i++){
+      const e=embersArr[i];
+      e.ph+=0.03*dt;e.x+=(e.vx+Math.sin(e.ph)*0.35)*dt*speed;e.y+=e.vy*dt*speed;
+      const fade=clamp(e.y/innerHeight,0,1);
+      if(e.y<-10){embersArr[i]=spawn(false);continue;}
+      const flick=0.55+0.45*Math.sin(e.ph*3.1);
+      const a=(0.25+0.65*fade)*flick;
+      // colour: amber when calm, angrier red as heat rises
+      const r=255,gr=Math.round(170-110*hs*e.hue-40*e.hue),b=Math.round(60-50*hs);
+      c.fillStyle=`rgba(${r},${gr},${b},${(a*0.18).toFixed(3)})`;c.beginPath();c.arc(e.x,e.y,e.r*4,0,6.283);c.fill();
+      c.fillStyle=`rgba(${r},${Math.min(230,gr+50)},${b+40},${a.toFixed(3)})`;c.beginPath();c.arc(e.x,e.y,e.r,0,6.283);c.fill();
+    }
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+if(isHost){initEmbers();makeQr();setInterval(()=>fetch('/healthz').catch(()=>{}),4*60*1000);}
 render();connect();
 })();

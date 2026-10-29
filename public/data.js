@@ -114,7 +114,7 @@ en:{title:"The Dragon's Order",sub:"A party adventure in the Grand Vent Forge of
  guildDie:"Roll a guild die",guild:"Guild die",hands:"Hands",fullscreen:"Fullscreen",live:"Live",offline:"Offline: hand votes and guild dice only",
  crits:"Natural 20s",fumbles:"Natural 1s",best:"Top roll",tieBreak:"A tie! The dice decided.",
  prologue:"Tonight the Grand Vent Forge of VILPE takes on its strangest customer yet. Create your hero on your phone: every class gets +3 on its own kind of challenge.",
- tagHelp:"Bonus classes",questLog:"Quest log",sceneHero:"Hero of the scene",vsWord:"vs",tl_fail:"Failure",tl_partial:"Partial",tl_success:"Success",tl_legendary:"Legendary",nowPlaying:"Now",endStats:"Delivered",ofOrder:"of 10,000 vents",reconnecting:"Reconnecting…",inRoom:"connected",waking:"Waking up the forge… (can take up to a minute)",hostKeyBad:"Wrong DM key. Open the DM link with the correct ?key=",joinUrl:"or open",onlineN:"online",kick:"Remove"},
+ tagHelp:"Bonus classes",fateRolling:"The guild's fate is being decided…",questLog:"Quest log",sceneHero:"Hero of the scene",vsWord:"vs",tl_fail:"Failure",tl_partial:"Partial",tl_success:"Success",tl_legendary:"Legendary",nowPlaying:"Now",endStats:"Delivered",ofOrder:"of 10,000 vents",reconnecting:"Reconnecting…",inRoom:"connected",waking:"Waking up the forge… (can take up to a minute)",hostKeyBad:"Wrong DM key. Open the DM link with the correct ?key=",joinUrl:"or open",onlineN:"online",kick:"Remove"},
 fi:{title:"Lohikäärmeen tilaus",sub:"Juhla-seikkailu VILPEn Suuressa Tuuletinpajassa",run:"Pyöritä peliä (iso näyttö + pelinjohtaja)",join:"Liity pelaajaksi",
  connecting:"Yhdistetään kiltasaliin…",noRoom:"Live-peliin ei saada yhteyttä täältä. Varmista, että olet kirjautunut claude.ai:hin ja avasit linkin, jonka pelinjohtaja jakoi.",
  yourName:"Sankarisi nimi",namePh:"esim. Herra Tuuletin",pickClass:"Valitse hahmoluokka",joinBtn:"Liity kiltaan",bonusOn:"+3:",
@@ -135,7 +135,7 @@ fi:{title:"Lohikäärmeen tilaus",sub:"Juhla-seikkailu VILPEn Suuressa Tuuletinp
  guildDie:"Heitä killan noppa",guild:"Killan noppa",hands:"Kädet",fullscreen:"Koko näyttö",live:"Yhteys päällä",offline:"Ei yhteyttä: vain käsiäänestys ja killan nopat",
  crits:"Luonnolliset 20:t",fumbles:"Luonnolliset 1:t",best:"Paras heitto",tieBreak:"Tasapeli! Noppa ratkaisi.",
  prologue:"Tänä yönä VILPEn Suuri Tuuletinpaja kohtaa kaikkien aikojen oudoimman asiakkaansa. Luo sankarisi puhelimella: jokainen luokka saa +3 omanlaisiinsa haasteisiin.",
- tagHelp:"Bonusluokat",questLog:"Seikkailun kulku",sceneHero:"Kohtauksen sankari",vsWord:"vs",tl_fail:"Epäonnistui",tl_partial:"Osittain",tl_success:"Onnistui",tl_legendary:"Legendaarinen",nowPlaying:"Nyt",endStats:"Toimitettu",ofOrder:"/ 10 000 tuuletinta",reconnecting:"Yhdistetään uudelleen…",inRoom:"yhteydessä",waking:"Herätellään pajaa… (voi kestää minuutin)",hostKeyBad:"Väärä pelinjohtajan avain. Avaa DM-linkki oikealla ?key=-arvolla",joinUrl:"tai avaa",onlineN:"paikalla",kick:"Poista"}
+ tagHelp:"Bonusluokat",fateRolling:"Killan kohtalo ratkeaa…",questLog:"Seikkailun kulku",sceneHero:"Kohtauksen sankari",vsWord:"vs",tl_fail:"Epäonnistui",tl_partial:"Osittain",tl_success:"Onnistui",tl_legendary:"Legendaarinen",nowPlaying:"Nyt",endStats:"Toimitettu",ofOrder:"/ 10 000 tuuletinta",reconnecting:"Yhdistetään uudelleen…",inRoom:"yhteydessä",waking:"Herätellään pajaa… (voi kestää minuutin)",hostKeyBad:"Väärä pelinjohtajan avain. Avaa DM-linkki oikealla ?key=-arvolla",joinUrl:"tai avaa",onlineN:"paikalla",kick:"Poista"}
 };
 
 
