@@ -43,6 +43,24 @@ function liveRolls() {
   return out;
 }
 
+// Auto-advance: once every online player has voted (or rolled), move on after a short pause
+let autoTimer = null, autoKey = '';
+function allDone() {
+  const ps = online(); if (!ps.length) return false; const k = key();
+  if (H.phase === 'vote') return ps.every(p => p.vote && p.vote.k === k);
+  if (H.phase === 'roll') return ps.every(p => p.roll && p.roll.k === k);
+  return false;
+}
+function checkAuto() {
+  const tag = H.runId + '|' + H.scene + '|' + H.phase;
+  if (!allDone()) { if (autoTimer && autoKey === tag) { clearTimeout(autoTimer); autoTimer = null; autoKey = ''; } return; }
+  if (autoTimer && autoKey === tag) return;
+  clearTimeout(autoTimer); autoKey = tag;
+  autoTimer = setTimeout(() => {
+    autoTimer = null; autoKey = '';
+    if (H.runId + '|' + H.scene + '|' + H.phase === tag && allDone()) { advance(); broadcast(); }
+  }, H.phase === 'roll' ? 2600 : 2000);
+}
 function advance() {
   switch (H.phase) {
     case 'lobby': H.phase = 'intro'; H.scene = 0; break;
@@ -176,10 +194,10 @@ const server = http.createServer(async (req, res) => {
     const b = await body(req);
     if (route === '/api/host') {
       if (b.key !== HOST_KEY) return json(res, 403, { error: 'bad_key' });
-      if (b.action === 'next') advance();
+      if (b.action === 'next') { if (!b.from || b.from === H.runId + '|' + H.scene + '|' + H.phase) advance(); }
       else if (b.action === 'reset') { H = fresh(); for (const p of players.values()) { p.vote = null; p.roll = null; } }
       else if (b.action === 'guild' && H.phase === 'roll' && H.guild.length < 40) H.guild.push(G.d20());
-      else if (b.action === 'kick' && typeof b.n === 'string') { for (const p of players.values()) if (p.n === b.n) { p.n = ''; p.c = ''; } }
+      else if (b.action === 'kick' && typeof b.n === 'string') { for (const p of players.values()) if (p.n === b.n) { p.n = ''; p.c = ''; }  checkAuto(); }
       broadcast(); return json(res, 200, { ok: true });
     }
     if (!okPid(b.pid)) return json(res, 400, { error: 'bad_pid' });
@@ -189,16 +207,16 @@ const server = http.createServer(async (req, res) => {
       if (!n || !G.cls(b.c)) return json(res, 400, { error: 'bad_input' });
       p.n = n; p.c = b.c; broadcast(); return json(res, 200, { ok: true, me: meOf(p.pid) });
     }
-    if (route === '/api/leave') { p.n = ''; p.c = ''; broadcast(); return json(res, 200, { ok: true }); }
+    if (route === '/api/leave') { p.n = ''; p.c = ''; broadcast(); checkAuto(); return json(res, 200, { ok: true }); }
     if (!p.n) return json(res, 409, { error: 'not_joined' });
     if (route === '/api/vote') {
       if (H.phase !== 'vote' || ![0, 1, 2].includes(b.v)) return json(res, 409, { error: 'not_voting' });
-      p.vote = { k: key(), v: b.v }; broadcast(); return json(res, 200, { ok: true, me: meOf(p.pid) });
+      p.vote = { k: key(), v: b.v }; broadcast(); checkAuto(); return json(res, 200, { ok: true, me: meOf(p.pid) });
     }
     if (route === '/api/roll') {
       if (H.phase !== 'roll') return json(res, 409, { error: 'not_rolling' });
       if (!(p.roll && p.roll.k === key())) p.roll = { k: key(), r: G.d20() };
-      broadcast(); return json(res, 200, { ok: true, me: meOf(p.pid) });
+      broadcast(); checkAuto(); return json(res, 200, { ok: true, me: meOf(p.pid) });
     }
     return json(res, 404, { error: 'not_found' });
   }

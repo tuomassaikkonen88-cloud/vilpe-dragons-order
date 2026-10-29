@@ -209,6 +209,7 @@ function updateVote(){
     r.querySelector('.vbar i').style.width=(tot?tl[i]/tot*100:0)+'%';
     r.classList.toggle('lead',tot>0&&tl[i]===max);});
   const ps=S.players||[],el=$('#vCount');if(el)el.textContent=ps.filter(p=>p.voted).length+' / '+ps.length;
+  const ad=$('#allDone');if(ad)ad.hidden=!(ps.length&&ps.every(p=>p.voted));
 }
 function updateRoll(){
   const {rs,avg,dc,tag}=liveRolls();setDuel(avg,dc);
@@ -216,6 +217,7 @@ function updateRoll(){
   if(f){const have=new Set([...f.children].map(c=>c.dataset.k));
     rs.forEach(x=>{if(have.has(x.k))return;f.insertAdjacentHTML('beforeend',dieHtml(x,tag,true));});}
   const ps=S.players||[],el=$('#rCount');if(el)el.textContent=ps.filter(p=>p.r!=null).length+' / '+ps.length;
+  const ad=$('#allDone');if(ad)ad.hidden=!(ps.length&&ps.every(p=>p.r!=null));
 }
 /* drumroll between rolling and the result */
 let lastPhaseKey='',drumKey='',drumUntil=0,drumTimer=null;
@@ -270,7 +272,7 @@ function renderHost(){
       h=`<div class="stage"><div class="left">${head}<div class="narr">${esc(L(sc).n)}</div></div><div class="right">${optCards(sc,'intro')}</div></div>`;break;
     case 'vote':
       h=`<div class="stage"><div class="left">${head}<div class="callout">${esc(t('voteOnPhones'))}</div>
-        <div class="bigcount"><span class="num" id="vCount"></span> <span>${esc(t('votesCast'))}</span> <span class="timer js-timer"></span></div></div>
+        <div class="bigcount"><span class="num" id="vCount"></span> <span>${esc(t('votesCast'))}</span> <span class="timer js-timer"></span></div><div class="alldone" id="allDone" hidden>${esc(t('allVoted'))}</div></div>
         <div class="right vrace">${sc.o.map((o,i)=>`<div class="vrow" data-i="${i}"><div class="vtop"><span class="ttl">${String.fromCharCode(65+i)}. ${esc(L(o).t)}</span><span class="vcnt num">0</span></div>
           <div class="chips"><span class="pill">${esc(tagLabel(o.tag))}</span><span class="pill hot">+3 ${esc(classesFor(o.tag))}</span></div>
           <div class="vbar"><i style="width:0%"></i></div></div>`).join('')}</div></div>`;break;
@@ -278,7 +280,7 @@ function renderHost(){
       h=`<div class="stage"><div class="left">${head}${chosen()}
         ${S.tie?`<div class="muted">${esc(t('tieBreak'))}</div>`:''}
         <div class="callout">${esc(t('rollOnPhones'))}</div>
-        <div class="bigcount"><span class="num" id="rCount"></span> <span>${esc(t('rolledN'))}</span> <span class="timer js-timer"></span></div></div>
+        <div class="bigcount"><span class="num" id="rCount"></span> <span>${esc(t('rolledN'))}</span> <span class="timer js-timer"></span></div><div class="alldone" id="allDone" hidden>${esc(t('allRolled'))}</div></div>
         <div class="right">${duelHtml(sc.dc,null,null)}<div class="dicefield" id="diceField"></div></div></div>`;break;
     case 'result':{
       const o=sc.o[S.winner],oc=S.outcome,tag=o.tag;
@@ -322,7 +324,7 @@ function renderDm(){
     ${langSw()}<button class="btn ghost small" id="dmFs" type="button">${esc(t('fullscreen'))}</button>
     ${S.phase!=='lobby'&&S.phase!=='awards'?`<button class="btn ghost small" id="dmReset" type="button">${esc(armReset?t('sure'):t('newGame'))}</button>`:''}
     <button class="btn" id="dmNext" type="button"${drumming()?' disabled':''}>${esc(t(labels[S.phase]))}</button>`;
-  $('#dmNext').onclick=async e=>{e.target.disabled=true;armReset=false;await host('next');};
+  $('#dmNext').onclick=async e=>{e.target.disabled=true;armReset=false;await host('next',{from:S.runId+'|'+S.scene+'|'+S.phase});};
   $('#dmFs').onclick=()=>{try{const p=document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();p&&p.catch&&p.catch(()=>{});}catch(e){}};
   const rs=$('#dmReset');if(rs)rs.onclick=()=>{if(armReset){armReset=false;host('reset');}else{armReset=true;renderDm();setTimeout(()=>{if(armReset){armReset=false;renderDm();}},4000);}};
   const gd=$('#dmGuild');if(gd)gd.onclick=()=>host('guild');
