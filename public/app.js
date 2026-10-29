@@ -164,6 +164,25 @@ function optCards(sc,mode){
      <div class="chips"><span class="pill">${esc(tagLabel(o.tag))}</span><span class="pill hot">+3 ${esc(classesFor(o.tag))}</span></div></div>`;
   }).join('');
 }
+function duel(oc){
+  const max=Math.max(25,oc.dc+9),pct=v=>clamp(v/max*100,0,100);
+  const zones=[['fail',0,oc.dc-3],['partial',oc.dc-3,oc.dc],['success',oc.dc,oc.dc+5],['legendary',oc.dc+5,max]];
+  return `<div class="duel"><div class="duel-row">
+    <div class="dn"><div class="eyebrow">${esc(t('groupAvg'))}</div><div class="n num t-${oc.tier}">${oc.avg}</div></div>
+    <div class="vsx">${esc(t('vsWord'))}</div>
+    <div class="dn"><div class="eyebrow">${esc(t('dc'))}</div><div class="n num">${oc.dc}</div></div></div>
+    <div class="track" role="img" aria-label="${esc(t('groupAvg'))} ${oc.avg}, ${esc(t('dc'))} ${oc.dc}">
+      ${zones.map(([k,a,b])=>`<div class="zone z-${k}${k===oc.tier?' on':''}" style="left:${pct(a)}%;width:${pct(b)-pct(a)}%"><span>${esc(t('tl_'+k))}</span></div>`).join('')}
+      <div class="dcline" style="left:${pct(oc.dc)}%"></div>
+      <div class="marker" style="left:${pct(oc.avg)}%"><b class="num">${oc.avg}</b></div>
+    </div></div>`;
+}
+function questLog(){
+  const log=S.log||[];
+  return `<div class="qlog"><span class="eyebrow">${esc(t('questLog'))}</span><div class="qsteps">${SCENES.map((sc,i)=>{
+    const e=log.find(x=>x.s===i);const cur=!e&&i===S.scene&&S.phase!=='lobby';
+    return `<div class="qstep ${e?'done':cur?'cur':''}"><span class="qn num">${i+1}</span><div class="qt"><b>${esc(L(sc).t)}</b>${e?`<span class="qtier t-${e.tier}">${esc(t('tl_'+e.tier))} · ${esc(L(sc.o[e.w]).t)}</span>`:cur?`<span class="qtier" style="color:var(--ember)">${esc(t('nowPlaying'))}</span>`:''}</div></div>`;}).join('')}</div></div>`;
+}
 function renderHost(){
   $('#host').hidden=false;
   if(badKey||!hostKey){$('#hostBand').innerHTML='';$('#dmBar').innerHTML='';$('#hostStage').innerHTML=`<div class="err">${esc(t('hostKeyBad'))}</div>`;return;}
@@ -209,10 +228,11 @@ function renderHost(){
       const o=sc.o[S.winner],oc=S.outcome;
       const chips=(S.lastRolls||[]).map(x=>`<span class="chip ${x.r===20?'c20':x.r===1?'c1':''}"><span>${x.c?cls(x.c).ic:'🎲'}</span><span class="nm">${esc(x.n||t('guild'))}</span><span class="r num">${x.tot}</span></span>`).join('');
       h=`<div class="stage"><div class="left">${head}<div class="tier t-${oc.tier}" style="font-size:clamp(2.6rem,5vw,4.4rem)">${esc(t('tier_'+oc.tier))}</div>${oc.tier==='partial'?`<div class="muted" style="font-weight:700;font-size:clamp(1.05rem,1.5vw,1.4rem)">${esc(t('partialNote'))}</div>`:''}
-        <div class="narr">${esc(oc.tier==='fail'?L(o).l:L(o).w)}</div>${deltaHtml(oc.delta)}</div>
-        <div class="right"><div class="bigavg"><div><div class="eyebrow">${esc(t('groupAvg'))}</div><div class="n num">${oc.avg}</div></div><div class="vs num">${esc(t('dc'))} ${oc.dc}</div></div>
-        ${oc.crit.length?`<div><span class="eyebrow">${esc(t('crits'))}</span><div class="chips" style="margin-top:4px">${oc.crit.map(n=>`<span class="chip c20">${esc(n)}</span>`).join('')}</div></div>`:''}
-        ${oc.fum.length?`<div><span class="eyebrow">${esc(t('fumbles'))}</span><div class="chips" style="margin-top:4px">${oc.fum.map(n=>`<span class="chip c1">${esc(n)}</span>`).join('')}</div></div>`:''}
+        <div class="narr">${esc(oc.tier==='fail'?L(o).l:L(o).w)}</div><div class="bigdeltas">${deltaHtml(oc.delta)}</div></div>
+        <div class="right">${duel(oc)}
+        <div class="feats">${oc.best?`<div class="feat hero-feat"><span class="eyebrow">${esc(t('sceneHero'))}</span><span class="fw">${esc(oc.best.n)}</span><span class="fs num">${oc.best.t}</span></div>`:''}
+        ${oc.crit.length?`<div class="feat"><span class="eyebrow">${esc(t('crits'))}</span><div class="chips">${oc.crit.map(n=>`<span class="chip c20">${esc(n)}</span>`).join('')}</div></div>`:''}
+        ${oc.fum.length?`<div class="feat"><span class="eyebrow">${esc(t('fumbles'))}</span><div class="chips">${oc.fum.map(n=>`<span class="chip c1">${esc(n)}</span>`).join('')}</div></div>`:''}</div>
         <div class="chips">${chips}</div></div></div>`;break;}
     case 'ending':{
       const e=ENDINGS[S.ending.id];
@@ -225,6 +245,7 @@ function renderHost(){
   }
   const stage=$('#hostStage');const sig=S.phase+S.scene;
   if(stage.dataset.sig!==sig){stage.dataset.sig=sig;stage.classList.remove('fade-in');void stage.offsetWidth;stage.classList.add('fade-in');}
+  if(['intro','vote','roll','result'].includes(S.phase))h+=questLog();
   stage.innerHTML=h;renderDm();
 }
 function renderDm(){

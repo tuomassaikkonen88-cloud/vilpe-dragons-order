@@ -20,7 +20,7 @@ const STATIC = {
 // ---------------- game state ----------------
 const rid = () => Math.random().toString(36).slice(2, 8);
 const fresh = () => ({ runId: rid(), phase: 'lobby', scene: 0, winner: -1, hand: [0, 0, 0], tally: [0, 0, 0], tie: false,
-  outcome: null, res: { g: 100, v: 0, m: 50 }, deadline: 0, guild: [], glory: {}, ending: null, awards: null, lastRolls: [] });
+  outcome: null, res: { g: 100, v: 0, m: 50 }, deadline: 0, guild: [], glory: {}, ending: null, awards: null, lastRolls: [], log: [] });
 let H = fresh();
 const players = new Map(); // pid -> {pid,n,c,vote:{k,v},roll:{k,r},conns,seen}
 const clients = new Set(); // {res,pid,host}
@@ -79,6 +79,7 @@ function resolveRoll() {
     fum: totals.filter(x => x.r === 1 && x.phone).map(x => x.n).slice(0, 8),
     best: best ? { n: best.n, t: best.tot } : null };
   H.lastRolls = totals.map(x => ({ n: x.n, c: x.c, r: x.r, tot: x.tot }));
+  H.log.push({ s: H.scene, w: H.winner, tier });
   for (const x of totals) {
     if (!x.phone) continue;
     const g = H.glory[x.pid] || (H.glory[x.pid] = { n: x.n, sum: 0, n20: 0, n1: 0, hi: 0, cnt: 0 });
@@ -112,7 +113,7 @@ function publicState() {
   return {
     runId: H.runId, phase: H.phase, scene: H.scene, winner: H.winner, tie: H.tie,
     tally: H.phase === 'vote' ? liveTally() : H.tally, hand: H.hand, outcome: H.outcome, res: H.res,
-    left: Math.max(0, H.deadline - Date.now()), ending: H.ending, awards: H.awards, guild: H.guild, lastRolls: H.lastRolls,
+    left: Math.max(0, H.deadline - Date.now()), ending: H.ending, awards: H.awards, guild: H.guild, lastRolls: H.lastRolls, log: H.log,
     players: online().map(p => ({ n: p.n, c: p.c, voted: !!(p.vote && p.vote.k === k), r: p.roll && p.roll.k === k ? p.roll.r : null })),
   };
 }
