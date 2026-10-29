@@ -276,7 +276,7 @@ function renderHost(){
       h=`<div class="stage"><div class="left">${head}<div class="callout">${esc(t('voteOnPhones'))}</div>
         <div class="bigcount"><span class="num" id="vCount"></span> <span>${esc(t('votesCast'))}</span> <span class="timer js-timer"></span></div><div class="alldone" id="allDone" hidden>${esc(t('allVoted'))}</div></div>
         <div class="right vrace">${art('scene'+(S.scene+1),'small')}${sc.o.map((o,i)=>`<div class="vrow vrow-l" data-i="${i}"><span class="vletter">${String.fromCharCode(65+i)}</span>
-          <div class="vbar"><i style="width:0%"></i></div><span class="vcnt num">0</span></div>`).join('')}</div></div>`;break;
+          <div class="vmid"><span class="vttl">${esc(L(o).t)}</span><div class="vbar"><i style="width:0%"></i></div></div><span class="vcnt num">0</span></div>`).join('')}</div></div>`;break;
     case 'roll':
       h=`<div class="stage"><div class="left">${head}${chosen()}
         ${S.tie?`<div class="muted">${esc(t('tieBreak'))}</div>`:''}
