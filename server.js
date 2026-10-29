@@ -59,7 +59,7 @@ function checkAuto() {
   autoTimer = setTimeout(() => {
     autoTimer = null; autoKey = '';
     if (H.runId + '|' + H.scene + '|' + H.phase === tag && allDone()) { advance(); broadcast(); }
-  }, H.phase === 'roll' ? 2600 : 2000);
+  }, H.phase === 'roll' ? 4100 : 3500);
 }
 function advance() {
   switch (H.phase) {
