@@ -133,7 +133,7 @@ function playerBody(me,my){
       return `<div class="card">${head}<div><span class="muted">${esc(t('chosen'))}:</span> <b>${esc(L(o).t)}</b>${my.tag===o.tag?` <span class="pill hot">${esc(t('yourBonus'))}</span>`:''}</div>${inner}</div>`;}
     case 'result':{
       const o=sc.o[S.winner],oc=S.outcome||{};
-      return `<div class="card">${head}<div class="tier t-${oc.tier}">${esc(t('tier_'+oc.tier))}</div>
+      return `<div class="card">${head}<div class="tier t-${oc.tier}">${esc(t('tier_'+oc.tier))}</div>${oc.tier==='partial'?`<div class="muted" style="font-weight:700">${esc(t('partialNote'))}</div>`:''}
        <div class="narr">${esc(oc.tier==='fail'?L(o).l:L(o).w)}</div>${deltaHtml(oc.delta)}
        <div class="muted num">${esc(t('groupAvg'))}: ${oc.avg} · ${esc(t('dc'))} ${oc.dc}</div></div>`;}
     case 'ending':case 'awards':{
@@ -208,7 +208,7 @@ function renderHost(){
     case 'result':{
       const o=sc.o[S.winner],oc=S.outcome;
       const chips=(S.lastRolls||[]).map(x=>`<span class="chip ${x.r===20?'c20':x.r===1?'c1':''}"><span>${x.c?cls(x.c).ic:'🎲'}</span><span class="nm">${esc(x.n||t('guild'))}</span><span class="r num">${x.tot}</span></span>`).join('');
-      h=`<div class="stage"><div class="left">${head}<div class="tier t-${oc.tier}" style="font-size:clamp(2.6rem,5vw,4.4rem)">${esc(t('tier_'+oc.tier))}</div>
+      h=`<div class="stage"><div class="left">${head}<div class="tier t-${oc.tier}" style="font-size:clamp(2.6rem,5vw,4.4rem)">${esc(t('tier_'+oc.tier))}</div>${oc.tier==='partial'?`<div class="muted" style="font-weight:700;font-size:clamp(1.05rem,1.5vw,1.4rem)">${esc(t('partialNote'))}</div>`:''}
         <div class="narr">${esc(oc.tier==='fail'?L(o).l:L(o).w)}</div>${deltaHtml(oc.delta)}</div>
         <div class="right"><div class="bigavg"><div><div class="eyebrow">${esc(t('groupAvg'))}</div><div class="n num">${oc.avg}</div></div><div class="vs num">${esc(t('dc'))} ${oc.dc}</div></div>
         ${oc.crit.length?`<div><span class="eyebrow">${esc(t('crits'))}</span><div class="chips" style="margin-top:4px">${oc.crit.map(n=>`<span class="chip c20">${esc(n)}</span>`).join('')}</div></div>`:''}
