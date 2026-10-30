@@ -22,7 +22,7 @@ const STATIC = {
 // ---------------- game state ----------------
 const rid = () => Math.random().toString(36).slice(2, 8);
 const fresh = () => ({ runId: rid(), phase: 'lobby', scene: 0, winner: -1, hand: [0, 0, 0], tally: [0, 0, 0], tie: false,
-  outcome: null, res: { g: 100, v: 0, m: 50 }, deadline: 0, guild: [], glory: {}, ending: null, awards: null, lastRolls: [], log: [] });
+  outcome: null, res: { g: 100, v: 0, m: 35 }, deadline: 0, guild: [], glory: {}, ending: null, awards: null, lastRolls: [], log: [] });
 let H = fresh();
 const players = new Map(); // pid -> {pid,n,c,vote:{k,v},roll:{k,r},conns,seen}
 const clients = new Set(); // {res,pid,host}
@@ -168,7 +168,7 @@ function finishGame() {
   const full = r.v >= 10000;
   let id;
   if (r.v < 4000 || r.m < 20) id = 'disaster';
-  else if (full && r.m >= 70) id = 'legendary';
+  else if (full && r.m >= 85) id = 'legendary';
   else if (full && r.m >= 40) id = 'success';
   else if (full) id = 'grumpy';
   else if (r.v >= 7500 && r.m >= 40) id = 'short';

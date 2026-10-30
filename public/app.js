@@ -216,8 +216,8 @@ function deltaBi(d,share){
 const FOCUS={scene1:28,scene2:46,scene3:50,scene4:32,scene5:65,scene6:28,scene7:72,scene8:42,scene9:32};
 const art=(name,cls)=>`<figure class="art ${cls||''}"><img src="/img/${name}.jpg?v=${S&&S.iv||''}" style="object-position:50% ${FOCUS[name]??45}%" alt="" onerror="this.closest('figure').hidden=true"></figure>`;
 function duelHtml(dc,avg,tier){
-  const lo=Math.max(0,dc-11),max=dc+9,pct=v=>clamp((v-lo)/(max-lo)*100,0,100);
-  const zones=[['severe',lo,dc-6],['fail',dc-6,dc-3],['partial',dc-3,dc],['success',dc,dc+5],['legendary',dc+5,max]];
+  const lo=Math.max(0,dc-9),max=dc+6,pct=v=>clamp((v-lo)/(max-lo)*100,0,100);
+  const zones=[['severe',lo,dc-5],['fail',dc-5,dc-3],['partial',dc-3,dc],['success',dc,dc+2],['legendary',dc+2,max]];
   const has=avg!=null;
   return `<div class="duel" data-max="${max}" data-lo="${lo}"><div class="duel-row">
     <div class="dn"><div class="eyebrow">${bki('groupAvg')}</div><div class="n num ${has?'t-'+tier:''}" id="dAvg">${has?avg:'–'}</div></div>

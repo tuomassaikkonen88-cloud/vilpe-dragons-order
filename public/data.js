@@ -122,7 +122,7 @@ const SCENES=[
    en:{t:"Build a crane out of spare vent pipes",w:"The forge dwarves bolt spare vent pipes together into a magnificent crane and winch the crates straight up the cliff. The dragon peers over the edge, sees the crane and asks whether it is for sale.",l:"The crane works perfectly for the first ten crates. Then the wind catches it, and it spins slowly like a weathervane, scattering vents all over the mountainside."},
    fi:{t:"Rakenna nosturi ylimääräisistä tuuletinputkista",w:"Pajakääpiöt pulttaavat ylimääräiset tuuletinputket upeaksi nosturiksi ja vinssaavat laatikot suoraan jyrkänteen yli. Lohikäärme kurkistaa reunan yli, näkee nosturin ja kysyy, onko se myynnissä.",l:"Nosturi toimii täydellisesti ensimmäiset kymmenen laatikkoa. Sitten tuuli tarttuu siihen, ja se pyörii hitaasti kuin tuuliviiri levittäen tuulettimia pitkin vuorenrinnettä."}}
  ]},
-{dc:15,
+{dc:14,
  en:{t:"The Final Inspection",n:"Dawn breaks over the Northern Peaks. Emberbeard circles his mountain slowly and inspects every vent with one enormous, glowing eye. Below, a nervous project manager clutches a checklist and tries to remember whether the warranty covers dragon fire. The whole guild holds its breath. One last chance to win him over."},
  fi:{t:"Lopputarkastus",n:"Aamu sarastaa Pohjoisvuorten yllä. Hiiliparta kiertää vuortaan hitaasti ja tarkastaa jokaisen tuulettimen yhdellä valtavalla, hehkuvalla silmällä. Alhaalla hermostunut projektipäällikkö puristaa tarkistuslistaa ja yrittää muistaa, kattaako takuu lohikäärmeen tulen. Koko kilta pidättää hengitystään. Viimeinen tilaisuus voittaa hänet puolelleen."},
  o:[
@@ -202,7 +202,8 @@ const cls=id=>CLASSES.find(c=>c.id===id);
 const d20=()=>1+Math.floor(Math.random()*20);
 const modOf=(clsId,tag)=>{const c=cls(clsId);return c&&c.sk?(c.sk[tag]||0):0;};
 const rollTotal=(r,clsId,tag)=>r===1?0:Math.max(0,r+modOf(clsId,tag))+(r===20?5:0);
-const tierOf=(avg,dc)=>avg>=dc+5?'legendary':avg>=dc?'success':avg>=dc-3?'partial':avg>=dc-6?'fail':'severe';
+// Result bands vs difficulty: legendary +2, success 0, partial −3, failure −5, collapse below. (Tuned by simulation: a 10–20 player average moves little.)
+const tierOf=(avg,dc)=>avg>=dc+2?'legendary':avg>=dc?'success':avg>=dc-3?'partial':avg>=dc-5?'fail':'severe';
 const TIERS=['severe','fail','partial','success','legendary'];
 // loot from one d20: coins d20/2 (+3 coin classes), inspiration d20/5 (+2 inspiration classes), nat 20 doubles, nat 1 nothing
 const lootOf=(r,clsId)=>{if(r===1)return{c:0,i:0};const c=cls(clsId);let co=Math.floor(r/2)+(c&&c.loot==='coin'?3:0),ins=Math.floor(r/5)+(c&&c.loot==='insp'?2:0);if(r===20){co*=2;ins*=2;}return{c:co,i:ins};};
