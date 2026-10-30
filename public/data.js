@@ -122,7 +122,7 @@ const SCENES=[
    en:{t:"Build a crane out of spare vent pipes",w:"The forge dwarves bolt spare vent pipes together into a magnificent crane and winch the crates straight up the cliff. The dragon peers over the edge, sees the crane and asks whether it is for sale.",l:"The crane works perfectly for the first ten crates. Then the wind catches it, and it spins slowly like a weathervane, scattering vents all over the mountainside."},
    fi:{t:"Rakenna nosturi ylimääräisistä tuuletinputkista",w:"Pajakääpiöt pulttaavat ylimääräiset tuuletinputket upeaksi nosturiksi ja vinssaavat laatikot suoraan jyrkänteen yli. Lohikäärme kurkistaa reunan yli, näkee nosturin ja kysyy, onko se myynnissä.",l:"Nosturi toimii täydellisesti ensimmäiset kymmenen laatikkoa. Sitten tuuli tarttuu siihen, ja se pyörii hitaasti kuin tuuliviiri levittäen tuulettimia pitkin vuorenrinnettä."}}
  ]},
-{dc:14,
+{dc:15,
  en:{t:"The Final Inspection",n:"Dawn breaks over the Northern Peaks. Emberbeard circles his mountain slowly and inspects every vent with one enormous, glowing eye. Below, a nervous project manager clutches a checklist and tries to remember whether the warranty covers dragon fire. The whole guild holds its breath. One last chance to win him over."},
  fi:{t:"Lopputarkastus",n:"Aamu sarastaa Pohjoisvuorten yllä. Hiiliparta kiertää vuortaan hitaasti ja tarkastaa jokaisen tuulettimen yhdellä valtavalla, hehkuvalla silmällä. Alhaalla hermostunut projektipäällikkö puristaa tarkistuslistaa ja yrittää muistaa, kattaako takuu lohikäärmeen tulen. Koko kilta pidättää hengitystään. Viimeinen tilaisuus voittaa hänet puolelleen."},
  o:[
