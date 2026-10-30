@@ -64,7 +64,7 @@ setInterval(()=>{
 /* ---------------- player ---------------- */
 let pickClass=null,rolling=false,pDrumUntil=0;
 const structKey=d=>[d.runId,d.phase,d.scene,d.winner,d.me?[d.me.n,d.me.c,d.me.v,d.me.r??'',d.me.coins,d.me.insp,d.me.done?1:0,d.me.st,d.me.cd].join(','):'-',d.awards?1:0,d.rescue&&d.rescue.need===0?1:0].join('|');
-function updatePlayerLive(){const el=document.getElementById('pconn');if(el){el.className='conn '+(connected?'on':'off');el.textContent='● '+(connected?t('live'):t('reconnecting'));}
+function updatePlayerLive(){const pc=document.getElementById('pcount');if(pc&&S)pc.textContent=(S.count||0)+' '+t('onlineN');const el=document.getElementById('pconn');if(el){el.className='conn '+(connected?'on':'off');el.textContent='● '+(connected?t('live'):t('reconnecting'));}
   const rn=document.getElementById('prNeed');if(rn&&S&&S.rescue){rn.innerHTML=S.rescue.need>0?`${esc(t('rescueNeed'))}: <b class="num">${S.rescue.need}</b> ${esc(t('rescuePts'))}`:`<b class="t-success">${esc(t('rescued'))}</b>`;}}
 function stashHtml(me){return `<div class="stash"><span class="sc">🪙 <b class="num">${me.coins||0}</b></span><span class="si">✨ <b class="num">${me.insp||0}</b></span>${me.st>=2?`<span class="streak hot">🔥 ${me.st} · ${esc(t('streakHot'))}</span>`:me.cd>=2?`<span class="streak cold">🧊 ${me.cd} · ${esc(t('streakCold'))}</span>`:''}</div>`;}
 function lootHtml(me){const l=me.loot;if(!l)return'';if(!l.c&&!l.i)return `<div class="loot muted">${esc(t('noLoot'))}</div>`;
@@ -93,7 +93,7 @@ function renderPlayer(){
       const n=$('#pname').value.trim();if(!n||!pickClass)return;
       $('#pjoin').disabled=true;ls.set('vf_name',n);
       const r=await api('join',{pid,n,c:pickClass});
-      if(r.me){S={...S,me:r.me};renderPlayer();}else $('#pjoin').disabled=false;
+      if(r.me){S={...S,me:r.me};renderPlayer();}else{$('#pjoin').disabled=false;let e=document.getElementById('pjerr');if(!e){e=document.createElement('div');e.id='pjerr';e.className='err';$('#pjoin').after(e);}e.textContent=t(r.error==='full'?'joinFull':'joinErr');}
     };
     updatePlayerLive();return;
   }
@@ -125,7 +125,7 @@ function playerBody(me,my){
   const sc=SCENES[S.scene];
   const head=`<div class="eyebrow">${esc(t('scene'))} ${S.scene+1}</div><h2>${esc(L(sc).t)}</h2>`;
   switch(S.phase){
-    case 'lobby':return `<div class="card"><div class="eyebrow">VILPE</div><div class="narr">${esc(t('inLobby'))}</div><div class="muted num">${S.count} ${esc(t('onlineN'))}</div></div>`;
+    case 'lobby':return `<div class="card"><div class="eyebrow">VILPE</div><div class="narr">${esc(t('inLobby'))}</div><div class="muted num" id="pcount">${S.count||0} ${esc(t('onlineN'))}</div></div>`;
     case 'rules':return `<div class="card prules"><div class="eyebrow">${esc(lang==='fi'?'Ennen kuin seikkailu alkaa':'Before the adventure begins')}</div><h2>${esc(RULES.title[lang])}</h2><p class="narr">${esc(RULES.quest[lang])}</p>
       ${RULES.cards.map(c=>`<div class="prule"><b>${c.ic} ${esc(c[lang].t)}</b><span>${esc(c[lang].p)}</span></div>`).join('')}<p class="narr"><b>${esc(RULES.stake[lang])}</b></p></div>`;
     case 'intro':return `<div class="card">${head}<div class="narr">${esc(L(sc).n)}</div><div class="muted">${esc(t('listen'))}</div></div>`;

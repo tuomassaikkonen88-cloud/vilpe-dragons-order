@@ -46,18 +46,20 @@ function liveTally() {
 }
 function liveRolls() {
   const out = [];
-  for (const p of players.values()) if (p.n && p.roll && p.roll.k === key()) out.push({ pid: p.pid, n: p.n, c: p.c, r: p.roll.r, phone: true });
+  for (const p of players.values()) if (p.n && p.roll && p.roll.k === key()) out.push({ pid: p.pid, n: p.n, c: p.roll.c || p.c, r: p.roll.r, phone: true });
   for (const g of H.guild) out.push({ n: null, c: null, r: g, phone: false });
   return out;
 }
 
 // Auto-advance: once every online player has voted (or rolled), move on after a short pause
 let autoTimer = null, autoKey = '';
+const active = () => { const now = Date.now(); return online().filter(p => p.conns > 0 || now - p.seen < 15000); };
+const canGive = p => p.coins >= 20 || p.insp >= 6;
 function allDone() {
-  const ps = online(); if (!ps.length) return false; const k = key();
+  const ps = active(); if (!ps.length) return false; const k = key();
   if (H.phase === 'vote') return ps.every(p => p.vote && p.vote.k === k);
   if (H.phase === 'roll') return ps.every(p => p.roll && p.roll.k === k);
-  if (H.phase === 'rescue') return ps.every(p => p.done === k) || rescueNeed() === 0;
+  if (H.phase === 'rescue') return ps.every(p => p.done === k || !canGive(p)) || rescueNeed() === 0;
   return false;
 }
 function checkAuto() {
@@ -115,7 +117,7 @@ function computeRoll() {
     p.coins += c; p.insp += i; p.loot = { k, c, i, mult, streak: p.streak, cold: p.cold };
   }
   H.roll = { sum, n, avg, tier0, dc: sc.dc, totals };
-  if (tier0 === 'fail' || tier0 === 'partial') {
+  if ((tier0 === 'fail' || tier0 === 'partial') && online().some(canGive)) {
     const target = tier0 === 'fail' ? 'partial' : 'success';
     H.rescue = { pts: 0, target, thr: target === 'partial' ? sc.dc - 3 : sc.dc, givers: {}, until: Date.now() + RESCUE_MS };
     for (const p of players.values()) p.done = null;
@@ -230,7 +232,7 @@ function json(res, code, obj) { res.writeHead(code, { 'Content-Type': 'applicati
 function body(req) {
   return new Promise(resolve => {
     let d = ''; req.on('data', c => { d += c; if (d.length > 4000) req.destroy(); });
-    req.on('end', () => { try { resolve(JSON.parse(d || '{}')); } catch (e) { resolve({}); } });
+    req.on('end', () => { try { const o = JSON.parse(d || '{}'); resolve(o && typeof o === 'object' && !Array.isArray(o) ? o : {}); } catch (e) { resolve({}); } });
   });
 }
 const okPid = p => typeof p === 'string' && /^[a-z0-9]{8,32}$/.test(p);
@@ -286,9 +288,12 @@ const server = http.createServer(async (req, res) => {
     if (!okPid(b.pid)) return json(res, 400, { error: 'bad_pid' });
     const p = getP(b.pid); if (!p) return json(res, 503, { error: 'full' });
     if (route === '/api/join') {
-      const n = String(b.n || '').replace(/[\u0000-\u001f\u007f-\u009f​-‏‪-‮]/g, '').trim().replace(/\s+/g, ' ').slice(0, 18);
-      if (!n || !G.cls(b.c)) return json(res, 400, { error: 'bad_input' });
-      p.n = n; p.c = b.c; broadcast(); return json(res, 200, { ok: true, me: meOf(p.pid) });
+      const n = String(b.n || '').replace(/[\u0000-\u001f\u007f-\u009f​-‏‪-‮]/g, '').trim().replace(/\s+/g, ' ');
+      let n2 = Array.from(n).slice(0, 18).join('').trim();
+      if (!n2 || !G.cls(b.c)) return json(res, 400, { error: 'bad_input' });
+      const taken = x => [...players.values()].some(q => q !== p && q.n && q.n.toLowerCase() === x.toLowerCase());
+      if (taken(n2)) { const base = Array.from(n2).slice(0, 15).join('').trim(); let i = 2; while (taken(base + ' ' + i)) i++; n2 = base + ' ' + i; }
+      p.n = n2; p.c = b.c; broadcast(); return json(res, 200, { ok: true, me: meOf(p.pid) });
     }
     if (route === '/api/leave') { p.n = ''; p.c = ''; broadcast(); checkAuto(); return json(res, 200, { ok: true }); }
     if (!p.n) return json(res, 409, { error: 'not_joined' });
@@ -298,7 +303,7 @@ const server = http.createServer(async (req, res) => {
     }
     if (route === '/api/roll') {
       if (H.phase !== 'roll') return json(res, 409, { error: 'not_rolling' });
-      if (!(p.roll && p.roll.k === key())) p.roll = { k: key(), r: G.d20() };
+      if (!(p.roll && p.roll.k === key())) p.roll = { k: key(), r: G.d20(), c: p.c };
       broadcast(); checkAuto(); return json(res, 200, { ok: true, me: meOf(p.pid) });
     }
     if (route === '/api/give') {
