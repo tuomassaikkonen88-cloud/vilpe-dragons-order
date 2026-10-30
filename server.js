@@ -86,7 +86,8 @@ function advance() {
       else { finishGame(); H.phase = 'ending'; }
       break;
     case 'ending': H.phase = 'awards'; H.reveal = (H.awards || []).length * 1500 + 4000; H.deadline = Date.now() + H.reveal; break;
-    case 'awards': H = fresh(); for (const p of players.values()) resetStash(p); break;
+    case 'awards': H.phase = 'story'; H.storyAt = Date.now(); H.deadline = 0; break;
+    case 'story': H = fresh(); for (const p of players.values()) resetStash(p); break;
   }
 }
 const RESCUE_MS = 20000;
@@ -145,7 +146,11 @@ function finalizeRoll() {
     fum: totals.filter(x => x.r === 1 && x.phone).map(x => x.n).slice(0, 8),
     best: best ? { n: best.n, t: best.tot } : null };
   H.lastRolls = totals.map(x => ({ n: x.n, c: x.c, r: x.r, tot: x.tot }));
-  H.log.push({ s: H.scene, w: H.winner, tier });
+  const donor = H.rescue ? Object.values(H.rescue.givers).sort((a, b) => b.pts - a.pts)[0] : null;
+  H.log.push({ s: H.scene, w: H.winner, tier, tier0: R.tier0, avg: Math.round(avg * 10) / 10, dc: sc.dc, tally: H.tally, tie: H.tie,
+    hero: best ? { n: best.n, c: best.c, t: best.tot } : null,
+    crit: totals.filter(x => x.r === 20 && x.phone).map(x => x.n).slice(0, 6), fum: totals.filter(x => x.r === 1 && x.phone).map(x => x.n).slice(0, 6),
+    rescued: G.TIERS.indexOf(tier) > G.TIERS.indexOf(R.tier0), resc: !!H.rescue, pts, donor: donor ? donor.n : null });
   for (const x of totals) {
     if (!x.phone) continue;
     const g = H.glory[x.pid] || (H.glory[x.pid] = { n: x.n, sum: 0, raw: 0, n20: 0, n1: 0, hi: 0, cnt: 0 });
@@ -196,7 +201,7 @@ function publicState() {
     roll: H.phase === 'rescue' && H.roll ? { sum: H.roll.sum, n: H.roll.n, avg: Math.round(H.roll.avg * 10) / 10, tier0: H.roll.tier0, dc: H.roll.dc } : null,
     rescue: H.phase === 'rescue' && H.rescue ? { pts: H.rescue.pts, target: H.rescue.target, thr: H.rescue.thr, need: rescueNeed(),
       givers: Object.values(H.rescue.givers).sort((a, b) => b.pts - a.pts).slice(0, 12) } : null,
-    left: Math.max(0, H.deadline - Date.now()), ending: H.ending, awards: H.awards, stats: H.phase === 'awards' ? H.stats : null, reveal: H.reveal || 0, guild: H.guild, lastRolls: H.lastRolls, log: H.log,
+    left: Math.max(0, H.deadline - Date.now()), ending: H.ending, awards: H.awards, stats: (H.phase === 'awards' || H.phase === 'story') ? H.stats : null, storyMs: H.phase === 'story' ? Date.now() - H.storyAt : 0, reveal: H.reveal || 0, guild: H.guild, lastRolls: H.lastRolls, log: H.log,
     players: listed().map(p => ({ id: p.pub, n: p.n, c: p.c, voted: !!(p.vote && p.vote.k === k), r: p.roll && p.roll.k === k ? p.roll.r : null, st: p.streak, cd: p.cold, done: p.done === k })),
   };
 }

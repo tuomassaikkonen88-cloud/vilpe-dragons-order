@@ -1,5 +1,5 @@
 (function(){
-const {CLASSES,TAGS,SCENES,ENDINGS,T,cls,d20,rollTotal,tierOf,modOf,TIERS}=window.GAME;
+const {CLASSES,TAGS,SCENES,ENDINGS,T,cls,d20,rollTotal,tierOf,modOf,TIERS,storyOf}=window.GAME;
 const reduceMotion=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
 const $=s=>document.querySelector(s);
 const ls={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
@@ -29,6 +29,7 @@ let hostKey='';
 if(isHost){const q=new URLSearchParams(location.search).get('key');if(q){ls.set('vf_key',q);hostKey=q;}else hostKey=ls.get('vf_key','');}
 let pid=ls.get('vf_pid','');if(!/^[a-z0-9]{8,32}$/.test(pid)){pid=(Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2)).replace(/[^a-z0-9]/g,'').slice(0,16);ls.set('vf_pid',pid);}
 
+let storyRecv=Date.now(),storyOff=0;
 let S=null,connected=false,everConnected=false,badKey=false,localDeadline=0;
 function render(){document.documentElement.lang=isHost?'fi':lang;if(isHost)renderHost();else renderPlayer();}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-lang]');if(b&&!isHost){lang=b.dataset.lang;ls.set('vf_lang',lang);render();}});
@@ -40,7 +41,7 @@ function connect(){
   es.onopen=()=>{connected=true;everConnected=true;render();};
   es.onmessage=ev=>{
     let d;try{d=JSON.parse(ev.data)}catch(e){return}
-    const prev=S;S=d;localDeadline=Date.now()+(+d.left||0);
+    const prev=S;S=d;localDeadline=Date.now()+(+d.left||0);if(d.phase==='story')storyRecv=Date.now();if(prev&&prev.phase!=='story'&&d.phase==='story')storyOff=0;
     if(isHost)renderHost();
     else if(!rolling&&(!prev||structKey(prev)!==structKey(d)))renderPlayer();
     else updatePlayerLive();
@@ -157,6 +158,12 @@ function playerBody(me,my){
        ${oc.rescued?`<div class="rescuedbadge">🛟 ${esc(t('rescuedNote'))} +${oc.pts}</div>`:''}${oc.tier==='severe'?`<div class="muted" style="font-weight:700">${esc(t('severeNote'))}</div>`:''}
        <div class="narr">${esc(oc.tier==='fail'||oc.tier==='severe'?L(o).l:L(o).w)}</div>${deltaHtml(oc.delta,oc.share)}${lootHtml(me)}
        <div class="muted num">${esc(t('groupAvg'))}: ${oc.avg} · ${esc(t('dc'))} ${oc.dc}</div></div>`;}
+    case 'story':{
+      const st=storyOf(S.log,lang,storyInfo());
+      return `<div class="card pstory"><div class="eyebrow">${esc(st.prologue.t)}</div><div class="muted">${esc(t('storyWatch'))}</div>
+        <p class="narr">${esc(st.prologue.p)}</p>
+        ${st.chapters.map(c=>`<div class="pchap"><div class="eyebrow">${esc(c.label)} · <span class="t-${c.tier}">${esc(t('tl_'+c.tier))}</span></div><h3>${esc(c.t)}</h3><p class="narr">${esc(c.p)}</p></div>`).join('')}
+        <div class="pchap"><div class="eyebrow">${esc(st.epilogue.label)}</div><h3 class="t-legendary">${esc(st.epilogue.t)}</h3><p class="narr">${esc(st.epilogue.p)}</p><p class="narr"><i>${esc(st.epilogue.fin)}</i></p></div></div>`;}
     case 'ending':case 'awards':{
       const e=S.ending?ENDINGS[S.ending.id]:null;let a='';
       if(S.phase==='awards'&&S.awards){
@@ -300,9 +307,10 @@ function renderHost(){
   const chosen=()=>{const o=sc.o[S.winner];return `<div class="hopt win"><div class="top"><span class="ttl">${esc(tf('chosen'))}: ${BS(o.fi.t,o.en.t,'sm')}</span></div>
         <div class="chips"><span class="pill">${tagBi(o.tag)}</span>${modChips(o.tag)}</div></div>`;};
   const stage=$('#hostStage');
-  const sig=[S.runId,S.phase,S.scene,S.winner,drum?'drum':''].join('|');
+  const stN=S.phase==='story'?(S.log||[]).length+2:0,stI=S.phase==='story'?storySlide(stN):0;
+  const sig=[S.runId,S.phase,S.scene,S.winner,drum?'drum':'',stI].join('|');
   const live={vote:updateVote,roll:updateRoll,rescue:updateRescue}[S.phase];
-  if((live||drum||S.phase==='awards')&&stage.dataset.sig===sig){if(live)live();renderDm();return;}
+  if((live||drum||S.phase==='awards'||S.phase==='story')&&stage.dataset.sig===sig){if(live)live();renderDm();return;}
   if(S.phase==='awards')awardsRecv=Date.now();
   let h='';
   switch(S.phase){
@@ -360,6 +368,26 @@ function renderHost(){
         <h2 class="stitle" style="color:var(--gold)">${BS(e.fi.t,e.en.t)}</h2>
         <div class="deltas"><span class="delta ${S.ending.v>=10000?'up':'down'}">${fmtFi(S.res.v)} / 10 000 ${BI('tuuletinta','vents')}</span><span class="delta">${bki('mood')}: ${BI(tf(moodKey(S.res.m)),te(moodKey(S.res.m)))}</span></div></div>
         ${twoCol(e.fi.n,e.en.n,'end')}${art('ending-'+S.ending.id,'sq3')}</div>`;break;}
+    case 'story':{
+      const fi=storyOf(S.log,'fi',storyInfo()),en=storyOf(S.log,'en',storyInfo());
+      const dots=`<div class="sdots">${Array.from({length:stN},(_,i)=>`<span class="${i===stI?'on':i<stI?'past':''}"></span>`).join('')}</div>`;
+      const tierB=k=>`<span class="tierb t-${k}">${BI(tf('tier_'+k),te('tier_'+k))}</span>`;
+      if(stI===0){
+        h=`<div class="intro3 story"><div class="ihead"><div class="eyebrow">${BI('Seikkailun kertaus','The story so far')}</div><h2 class="stitle">${BS(fi.prologue.t,en.prologue.t)}</h2>
+          <div class="chips">${(S.stats||[]).map(p=>`<span class="chip"><span>${cls(p.c)?cls(p.c).ic:''}</span><span class="nm">${esc(p.n)}</span></span>`).join('')}</div></div>
+          ${twoCol(fi.prologue.p,en.prologue.p)}${art('lobby','sq3')}</div>${dots}`;
+      }else if(stI<=fi.chapters.length){
+        const c=fi.chapters[stI-1],ce=en.chapters[stI-1];
+        h=`<div class="intro3 story"><div class="ihead"><div class="eyebrow">${BI(c.label,ce.label)}</div><h2 class="stitle">${BS(c.t,ce.t)}</h2>
+          <div class="sbadges">${tierB(c.tier)}${c.hero?`<span class="chip c20">⭐ ${cls(c.hero.c)?cls(c.hero.c).ic+' ':''}<span class="nm">${esc(c.hero.n)}</span><span class="r num">${c.hero.t}</span></span>`:''}</div></div>
+          ${twoCol(c.p,ce.p,'stext')}${art('scene'+c.i,'sq3')}</div>${dots}`;
+      }else{
+        const mvp=((S.awards||[]).find(a=>a.k==='mvp'))||null;
+        h=`<div class="intro3 story"><div class="ihead"><div class="eyebrow">${BI(fi.epilogue.label,en.epilogue.label)}</div><h2 class="stitle" style="color:var(--gold)">${BS(fi.epilogue.t,en.epilogue.t)}</h2>
+          ${mvp?`<div class="sbadges"><span class="chip c20">👑 ${cls(mvp.c)?cls(mvp.c).ic+' ':''}<span class="nm">${esc(mvp.n)}</span></span></div>`:''}</div>
+          ${twoCol(fi.epilogue.p+' '+fi.epilogue.fin,en.epilogue.p+' '+en.epilogue.fin,'stext')}${art('ending-'+S.ending.id,'sq3')}</div>${dots}`;
+      }
+      break;}
     case 'awards':{
       const e=ENDINGS[S.ending.id],aws=S.awards||[],st=S.stats||[];
       const revealMs=S.reveal||1,elapsed=(revealMs-(+S.left||0))/1000+(Date.now()-awardsRecv)/1000;
@@ -386,6 +414,9 @@ function renderHost(){
   if(live)live();
   renderDm();
 }
+const storyInfo=()=>({seed:S.runId,players:(S.stats||[]).length,ending:S.ending&&S.ending.id,vents:S.res.v,mood:S.res.m,mvp:((S.awards||[]).find(a=>a.k==='mvp')||{}).n});
+const STORY_PRO=9,STORY_CH=14;
+function storySlide(n){const el=(S.storyMs||0)/1000+(Date.now()-storyRecv)/1000;const auto=el<STORY_PRO?0:1+Math.floor((el-STORY_PRO)/STORY_CH);return clamp(auto+storyOff,0,n-1);}
 const AWI={snack:'🍗',fumble:'🤦',cold:'🧊',rebel:'🏴',gen:'🛟',insp:'✨',rich:'🪙',streak:'🔥',luck:'🍀',mvp:'👑'};
 let awardsRecv=Date.now();
 function awVal(a){const x=a.x;switch(a.k){
@@ -404,18 +435,20 @@ function renderDm(){
   const sig=[S.runId,S.phase,S.scene,armReset?1:0,drumming()?1:0].join('|');
   if(sig===dmSig){const c=$('#dmConn');if(c){c.className='conn '+(connected?'on':'off');c.textContent=connTxt;}return;}
   dmSig=sig;
-  const labels={lobby:'begin',intro:'openVote',vote:'closeVote',roll:'reveal',rescue:'endRescue',result:S.scene<SCENES.length-1?'next':'finale',ending:'showAwards',awards:'newGame'};
+  const labels={lobby:'begin',intro:'openVote',vote:'closeVote',roll:'reveal',rescue:'endRescue',result:S.scene<SCENES.length-1?'next':'finale',ending:'showAwards',awards:'showStory',story:'newGame'};
   let mid='';
   if(false){}
   else if(S.phase==='roll')mid=`<button class="btn ghost small" id="dmGuild" type="button">🎲 ${esc(tf('guildDie'))}</button>`;
+  else if(S.phase==='story')mid=`<button class="btn ghost small" id="stPrev" type="button">◀ ${esc(tf('storyNav'))}</button><button class="btn ghost small" id="stNext" type="button">${esc(tf('storyNav'))} ▶</button>`;
   bar.innerHTML=`<span class="tag">DM</span><span id="dmConn" class="conn ${connected?'on':'off'}">${esc(connTxt)}</span>${mid}<span class="grow"></span>
     <button class="btn ghost small" id="dmFs" type="button">${esc(tf('fullscreen'))}</button>
-    ${S.phase!=='lobby'&&S.phase!=='awards'?`<button class="btn ghost small" id="dmReset" type="button">${esc(armReset?tf('sure'):tf('newGame'))}</button>`:''}
+    ${S.phase!=='lobby'&&S.phase!=='awards'&&S.phase!=='story'?`<button class="btn ghost small" id="dmReset" type="button">${esc(armReset?tf('sure'):tf('newGame'))}</button>`:''}
     <button class="btn" id="dmNext" type="button"${drumming()?' disabled':''}>${esc(tf(labels[S.phase]))}</button>`;
   $('#dmNext').onclick=async e=>{const btn=e.currentTarget;btn.disabled=true;armReset=false;const r=await host('next',{from:S.runId+'|'+S.scene+'|'+S.phase});if(!r||!r.ok){btn.disabled=false;}setTimeout(()=>{if(btn.isConnected&&btn.disabled&&!drumming()){btn.disabled=false;}},3000);};
   $('#dmFs').onclick=()=>{try{const p=document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();p&&p.catch&&p.catch(()=>{});}catch(e){}};
   const rs=$('#dmReset');if(rs)rs.onclick=()=>{if(armReset){armReset=false;dmSig='';host('reset');}else{armReset=true;renderDm();setTimeout(()=>{if(armReset){armReset=false;renderDm();}},4000);}};
   const gd=$('#dmGuild');if(gd)gd.onclick=()=>host('guild');
+  const sp=$('#stPrev'),sn=$('#stNext');if(sp)sp.onclick=()=>{storyOff--;renderHost();};if(sn)sn.onclick=()=>{storyOff++;renderHost();};
 }
 
 
@@ -463,6 +496,7 @@ function initEmbers(){
 
 // scale the TV layout (designed at 1920x1080) to fit any screen or display-scaling setting
 function fitTv(){const z=Math.min(innerWidth/1920,innerHeight/1080);document.documentElement.classList.add('tvfit');const h=$('#host');h.style.zoom=z;h.style.minHeight=(innerHeight/z)+'px';}
+setInterval(()=>{if(isHost&&S&&S.phase==='story')renderHost();},500);
 if(isHost){fitTv();addEventListener('resize',fitTv);initEmbers();makeQr();setInterval(()=>fetch('/healthz').catch(()=>{}),4*60*1000);}
 render();connect();
 })();
