@@ -304,11 +304,51 @@ function fitRules(first){const pg=document.querySelector('.rulespage');if(!pg)re
   pg.style.setProperty('--rk',(lo-0.005).toFixed(3));if(pause){void st.offsetWidth;st.classList.remove('nofx');}}
 addEventListener('resize',()=>{if(S&&S.phase==='rules')setTimeout(fitRules,50);});
 if(document.fonts)document.fonts.ready.then(()=>{if(S&&S.phase==='rules')fitRules();});
+
+/* ---------------- music (TV only): a looping bed per phase/scene + stingers on results ---------------- */
+const music=(()=>{
+  let vol=+ls.get('vf_vol',0.6),muted=!!ls.get('vf_mute',false),unlocked=false,cur=null,curName='',duck=1,lastPhase='',lastSting='';
+  const src=n=>'/audio/'+n+'.mp3?v='+((S&&S.iv)||'');
+  const target=()=>muted?0:vol*duck;
+  const fades=new Map(),pool=new Map();
+  function fade(a,to,ms,done){clearInterval(fades.get(a));const from=a.volume,t0=Date.now();
+    const id=setInterval(()=>{const k=Math.min(1,(Date.now()-t0)/ms);try{a.volume=Math.max(0,Math.min(1,from+(to-from)*k));}catch(e){}
+      if(k>=1){clearInterval(id);fades.delete(a);done&&done();}},40);fades.set(a,id);}
+  function start(a){a.play().then(()=>fade(a,target(),1500)).catch(()=>{});}
+  function bed(name,loop){
+    if(name===curName)return;curName=name;
+    const old=cur;if(old)fade(old,0,1200,()=>old.pause());
+    if(!name){cur=null;return;}
+    // keep the current scene's bed so it resumes where it was after a rescue; drop older ones
+    for(const [k,el] of pool)if(k!==name&&el!==old){el.pause();el.src='';pool.delete(k);}
+    let a=pool.get(name);if(!a){a=new Audio(src(name));a.preload='auto';pool.set(name,a);}
+    a.loop=loop;clearInterval(fades.get(a));a.volume=0;cur=a;if(unlocked)start(a);
+  }
+  function sting(name,delay){setTimeout(()=>{if(!unlocked||muted)return;const a=new Audio(src(name));a.volume=Math.min(1,vol*1.15);
+    duck=0.2;if(cur)fade(cur,target(),250);
+    const back=()=>{duck=1;if(cur)fade(cur,target(),1800);};a.onended=back;a.onerror=back;a.play().catch(back);},delay||0);}
+  function sync(){if(!S)return;const p=S.phase;let n='';
+    if(p==='lobby'||p==='rules')n='lobby';
+    else if(p==='intro'||p==='vote'||p==='roll'||p==='result')n='scene'+(S.scene+1);
+    else if(p==='rescue')n='rescue';
+    else if(p==='ending')n=S.ending?'end-'+S.ending.id:'';
+    else if(p==='awards'||p==='story')n='awards';
+    // result stinger only on a live transition (not when the TV page is reloaded mid-result)
+    if(p==='result'&&S.outcome){const k=S.runId+'|'+S.scene;if(lastSting!==k){lastSting=k;if(lastPhase==='roll'||lastPhase==='rescue')sting('st-'+S.outcome.tier,700);}}
+    bed(n,p!=='ending');lastPhase=p;
+  }
+  const unlock=()=>{if(unlocked)return;unlocked=true;if(cur)start(cur);};
+  addEventListener('pointerdown',unlock,true);addEventListener('keydown',unlock,true);
+  return{sync,
+    get muted(){return muted},get vol(){return vol},
+    setVol(v){vol=Math.max(0,Math.min(1,+v||0));ls.set('vf_vol',vol);if(cur){clearInterval(fades.get(cur));cur.volume=target();}},
+    toggle(){muted=!muted;ls.set('vf_mute',muted);if(cur){clearInterval(fades.get(cur));cur.volume=target();}return muted;}};
+})();
 function renderHost(){
   $('#host').hidden=false;
   if(badKey||!hostKey){$('#hostBand').innerHTML='';$('#dmBar').innerHTML='';$('#hostStage').innerHTML=`<div class="err">${esc(tf('hostKeyBad'))}<br>${esc(te('hostKeyBad'))}</div>`;return;}
   if(!S){$('#hostBand').innerHTML=`<div class="brand"><h1>${esc(tf('title'))}</h1><div class="sub">${esc(te('title'))}</div></div>`;$('#hostStage').innerHTML=`<div class="muted">${bki('waking')}</div>`;renderDm();return;}
-  setHeat(S.res.m);
+  setHeat(S.res.m);music.sync();
   const r=S.res;
   $('#hostBand').innerHTML=`<div class="brand"><h1>${esc(tf('title'))}</h1><div class="sub">${esc(te('title'))} · VILPE</div></div>
    <div class="score">
@@ -458,6 +498,7 @@ function renderDm(){
   if(false){}
   else if(S.phase==='roll')mid=`<button class="btn ghost small" id="dmGuild" type="button">🎲 ${esc(tf('guildDie'))}</button>`;
   bar.innerHTML=`<span class="tag">DM</span><span id="dmConn" class="conn ${connected?'on':'off'}">${esc(connTxt)}</span>${mid}<span class="grow"></span>
+    <span class="dmmusic"><button class="btn ghost small" id="dmMute" type="button" title="Musiikki · Music">${music.muted?'🔇':'🔊'}</button><input id="dmVol" type="range" min="0" max="1" step="0.05" value="${music.vol}" aria-label="Äänenvoimakkuus · Volume"></span>
     <button class="btn ghost small" id="dmFs" type="button">${esc(tf('fullscreen'))}</button>
     ${S.phase!=='lobby'&&S.phase!=='awards'&&S.phase!=='story'?`<button class="btn ghost small" id="dmReset" type="button">${esc(armReset?tf('sure'):tf('newGame'))}</button>`:''}
     <button class="btn" id="dmNext" type="button"${drumming()?' disabled':''}>${esc(tf(labels[S.phase]))}</button>`;
@@ -465,6 +506,8 @@ function renderDm(){
   $('#dmFs').onclick=()=>{try{const p=document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();p&&p.catch&&p.catch(()=>{});}catch(e){}};
   const rs=$('#dmReset');if(rs)rs.onclick=()=>{if(armReset){armReset=false;dmSig='';host('reset');}else{armReset=true;renderDm();setTimeout(()=>{if(armReset){armReset=false;renderDm();}},4000);}};
   const gd=$('#dmGuild');if(gd)gd.onclick=()=>host('guild');
+  $('#dmMute').onclick=e=>{e.currentTarget.textContent=music.toggle()?'🔇':'🔊';};
+  $('#dmVol').oninput=e=>music.setVol(e.target.value);
 }
 
 

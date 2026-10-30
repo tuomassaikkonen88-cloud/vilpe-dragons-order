@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 3000;
 const HOST_KEY = process.env.HOST_KEY || 'dragon';
 const PUB = path.join(__dirname, 'public');
 // image version: changes whenever any image file changes, so browsers never show stale cached art
-const IMGV = (() => { try { return fs.readdirSync(path.join(__dirname, 'public', 'img')).map(f => { const st = fs.statSync(path.join(__dirname, 'public', 'img', f)); return f + st.size + st.mtimeMs; }).join('').split('').reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7).toString(36); } catch (e) { return String(Date.now()); } })();
+const IMGV = (() => { try { return ['img', 'audio'].flatMap(d => { try { return fs.readdirSync(path.join(__dirname, 'public', d)).map(f => { const st = fs.statSync(path.join(__dirname, 'public', d, f)); return d + f + st.size + st.mtimeMs; }); } catch (e) { return []; } }).join('').split('').reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7).toString(36); } catch (e) { return String(Date.now()); } })();
 const STATIC = {
   '/': ['app.html', 'text/html; charset=utf-8'],
   '/host': ['app.html', 'text/html; charset=utf-8'],
@@ -252,6 +252,22 @@ const server = http.createServer(async (req, res) => {
     return fs.createReadStream(path.join(PUB, f)).pipe(res);
   }
   if (req.method === 'GET' && route === '/healthz') return json(res, 200, { ok: true });
+  const au = req.method === 'GET' && /^\/audio\/([a-z0-9-]+)\.mp3$/.exec(route);
+  if (au) {
+    const f = path.join(PUB, 'audio', au[1] + '.mp3');
+    return fs.stat(f, (err, st) => {
+      if (err || !st.isFile()) { res.writeHead(404, { 'Content-Type': 'text/plain' }); return res.end('Not found'); }
+      const m = /bytes=(\d*)-(\d*)/.exec(req.headers.range || '');
+      if (m) {
+        let a = m[1] ? +m[1] : 0, b = m[2] ? +m[2] : st.size - 1; if (!m[1] && m[2]) { a = st.size - +m[2]; b = st.size - 1; }
+        if (a >= st.size || a > b) { res.writeHead(416, { 'Content-Range': 'bytes */' + st.size }); return res.end(); }
+        res.writeHead(206, { 'Content-Type': 'audio/mpeg', 'Accept-Ranges': 'bytes', 'Content-Range': `bytes ${a}-${b}/${st.size}`, 'Content-Length': b - a + 1, 'Cache-Control': 'public, max-age=3600' });
+        return fs.createReadStream(f, { start: a, end: b }).pipe(res);
+      }
+      res.writeHead(200, { 'Content-Type': 'audio/mpeg', 'Accept-Ranges': 'bytes', 'Content-Length': st.size, 'Cache-Control': 'public, max-age=3600' });
+      fs.createReadStream(f).pipe(res);
+    });
+  }
   const im = req.method === 'GET' && /^\/img\/([a-z0-9-]+)\.(jpg|png|webp)$/.exec(route);
   if (im) {
     const f = path.join(PUB, 'img', im[1] + '.' + im[2]);

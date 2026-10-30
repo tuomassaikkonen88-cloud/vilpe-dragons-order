@@ -475,3 +475,5 @@ html.tvfit .award .ax{font-size:1.3rem}
 .prules h2{font-family:var(--f-display);color:var(--gold);margin:0}
 .nofx,.nofx *{animation:none !important;transition:none !important}
 #pjerr{color:#ff8a7a;font-weight:700;margin-top:8px;text-align:center}
+.dmmusic{display:inline-flex;align-items:center;gap:6px}
+.dmmusic input{width:110px;accent-color:var(--gold)}
