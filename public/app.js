@@ -147,7 +147,7 @@ function playerBody(me,my){
       return `<div class="card rcard">${head}${lootHtml(me)}<div class="rbig">${esc(t('rescueTitle'))}</div>
         <div>${esc(t('rescueTo'))}: <b class="t-${R.target}">${esc(t('tl_'+R.target))}</b> <span class="timer num js-timer"></span></div>
         <div class="rneedp" id="prNeed"></div><div class="muted">${esc(t('rescueHelp'))}</div>
-        <div class="givebtns"><button type="button" class="btn" data-give="coins"${ok||me.coins<15||me.done?' disabled':''}>🪙 ${esc(t('giveCoins'))}</button><button type="button" class="btn insp" data-give="insp"${ok||me.insp<5||me.done?' disabled':''}>✨ ${esc(t('giveInsp'))}</button></div>
+        <div class="givebtns"><button type="button" class="btn" data-give="coins"${ok||me.coins<20||me.done?' disabled':''}>🪙 ${esc(t('giveCoins'))}</button><button type="button" class="btn insp" data-give="insp"${ok||me.insp<6||me.done?' disabled':''}>✨ ${esc(t('giveInsp'))}</button></div>
         ${me.given?`<div class="muted num">${esc(t('gaveTotal'))}: ${me.given} ${esc(t('rescuePts'))}</div>`:''}
         ${me.done?`<div class="muted center">${esc(t('rescueDoneMsg'))}</div>`:`<button type="button" class="btn ghost" id="pdone">${esc(t('rescueDone'))}</button>`}</div>`;}
     case 'result':{

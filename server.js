@@ -297,8 +297,8 @@ const server = http.createServer(async (req, res) => {
       if (H.phase !== 'rescue' || !H.rescue) return json(res, 409, { error: 'not_rescue' });
       if (rescueNeed() === 0) return json(res, 409, { error: 'rescued', me: meOf(p.pid) });
       let pts = 0;
-      if (b.what === 'coins' && p.coins >= 15) { p.coins -= 15; pts = 1; }
-      else if (b.what === 'insp' && p.insp >= 5) { p.insp -= 5; pts = 1; }
+      if (b.what === 'coins' && p.coins >= 20) { p.coins -= 20; pts = 1; }
+      else if (b.what === 'insp' && p.insp >= 6) { p.insp -= 6; pts = 1; }
       if (!pts) return json(res, 409, { error: 'broke', me: meOf(p.pid) });
       H.rescue.pts += pts; p.given += pts;
       const gv = H.rescue.givers[p.pub] || (H.rescue.givers[p.pub] = { id: p.pub, n: p.n, c: p.c, pts: 0 }); gv.pts += pts;
