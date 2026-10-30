@@ -473,3 +473,4 @@ html.tvfit .award .ax{font-size:1.3rem}
 .prules .prule{display:grid;gap:2px;padding-top:8px;border-top:1px solid var(--line)}
 .prules .prule span{font-size:.95rem}
 .prules h2{font-family:var(--f-display);color:var(--gold);margin:0}
+.nofx,.nofx *{animation:none !important;transition:none !important}

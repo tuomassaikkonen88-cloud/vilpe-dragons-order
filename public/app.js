@@ -293,12 +293,15 @@ function startSpin(dc){
   },90);
 }
 // Grow rule-card text until the fullest card is filled (works with whatever font the TV renders).
-function fitRules(){const pg=document.querySelector('.rulespage');if(!pg)return;
-  const cards=[...pg.querySelectorAll('.rcard2')];
-  const over=()=>cards.some(c=>c.scrollHeight>c.clientHeight+1)||document.documentElement.scrollHeight>window.innerHeight+1;
-  let lo=0.8,hi=1.8;
-  for(let i=0;i<9;i++){const m=(lo+hi)/2;pg.style.setProperty('--rk',m.toFixed(3));if(over())hi=m;else lo=m;}
-  pg.style.setProperty('--rk',(lo*0.97).toFixed(3));}
+// Measured with animations paused so the flip-in can't skew the numbers; the flip then replays at the final size.
+let rulesAt=0;
+function fitRules(first){const pg=document.querySelector('.rulespage');if(!pg)return;if(first)rulesAt=Date.now();
+  const st=$('#hostStage');const pause=Date.now()-rulesAt<2600;if(pause)st.classList.add('nofx');
+  const cards=[...pg.querySelectorAll('.rcard2')];const de=document.documentElement;
+  const over=()=>cards.some(c=>c.scrollHeight>c.clientHeight)||de.scrollHeight>de.clientHeight;
+  let lo=0.7,hi=2;
+  for(let i=0;i<12;i++){const m=(lo+hi)/2;pg.style.setProperty('--rk',m.toFixed(3));if(over())hi=m;else lo=m;}
+  pg.style.setProperty('--rk',(lo-0.005).toFixed(3));if(pause){void st.offsetWidth;st.classList.remove('nofx');}}
 addEventListener('resize',()=>{if(S&&S.phase==='rules')setTimeout(fitRules,50);});
 if(document.fonts)document.fonts.ready.then(()=>{if(S&&S.phase==='rules')fitRules();});
 function renderHost(){
@@ -424,9 +427,9 @@ function renderHost(){
   if(stage.dataset.fade!==fadeSig){stage.classList.remove('fade-in');void stage.offsetWidth;stage.classList.add('fade-in');}
   stage.dataset.fade=fadeSig;stage.dataset.sig=sig;
   stage.innerHTML=h;
-  if(S.phase==='rules'){fitRules();setTimeout(fitRules,2400);}
   if(live)live();
   renderDm();
+  if(S.phase==='rules')fitRules(true);
 }
 const storyInfo=()=>({seed:S.runId,players:(S.stats||[]).length,ending:S.ending&&S.ending.id,vents:S.res.v,mood:S.res.m,mvp:((S.awards||[]).find(a=>a.k==='mvp')||{}).n});
 const STORY_PRO=9,STORY_CH=14;
