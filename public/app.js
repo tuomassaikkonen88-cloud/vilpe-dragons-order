@@ -1,5 +1,5 @@
 (function(){
-const {CLASSES,TAGS,SCENES,ENDINGS,T,cls,d20,rollTotal,tierOf,modOf,TIERS,storyOf}=window.GAME;
+const {RULES,CLASSES,TAGS,SCENES,ENDINGS,T,cls,d20,rollTotal,tierOf,modOf,TIERS,storyOf}=window.GAME;
 const reduceMotion=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
 const $=s=>document.querySelector(s);
 const ls={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
@@ -126,6 +126,8 @@ function playerBody(me,my){
   const head=`<div class="eyebrow">${esc(t('scene'))} ${S.scene+1}</div><h2>${esc(L(sc).t)}</h2>`;
   switch(S.phase){
     case 'lobby':return `<div class="card"><div class="eyebrow">VILPE</div><div class="narr">${esc(t('inLobby'))}</div><div class="muted num">${S.count} ${esc(t('onlineN'))}</div></div>`;
+    case 'rules':return `<div class="card prules"><div class="eyebrow">${esc(lang==='fi'?'Ennen kuin seikkailu alkaa':'Before the adventure begins')}</div><h2>${esc(RULES.title[lang])}</h2><p class="narr">${esc(RULES.quest[lang])}</p>
+      ${RULES.cards.map(c=>`<div class="prule"><b>${c.ic} ${esc(c[lang].t)}</b><span>${esc(c[lang].p)}</span></div>`).join('')}<p class="narr"><b>${esc(RULES.stake[lang])}</b></p></div>`;
     case 'intro':return `<div class="card">${head}<div class="narr">${esc(L(sc).n)}</div><div class="muted">${esc(t('listen'))}</div></div>`;
     case 'vote':
       return `<div class="card">${head}<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><b>${esc(t('voteNow'))}</b><span class="timer num js-timer"></span></div>
@@ -324,6 +326,12 @@ function renderHost(){
         <div class="chips">${ps.length?ps.map(p=>`<span class="chip"><span>${cls(p.c).ic}</span><span class="nm">${esc(p.n)}</span></span>`).join(''):`<span class="muted">${bki('noHeroes')}</span>`}</div></div>
         ${art('lobby','sq')}</div>`;
       break;
+    case 'rules':
+      h=`<div class="rulespage"><div class="rbanner"><div class="eyebrow">${BI('Ennen kuin seikkailu alkaa','Before the adventure begins')}</div><h2 class="stitle">${BS(RULES.title.fi,RULES.title.en)}</h2>
+          <div class="bicols rq"><div class="bcol"><p class="narr">${esc(RULES.quest.fi)}</p></div><div class="bcol"><p class="narr be-n">${esc(RULES.quest.en)}</p></div></div></div>
+        <div class="rgrid">${RULES.cards.map((c,i)=>`<div class="rcard2" style="--d:${(0.3+i*0.25).toFixed(2)}s"><div class="rch"><span class="ric">${c.ic}</span><span class="rct">${esc(c.fi.t)}<span> · ${esc(c.en.t)}</span></span></div>
+          <p class="rfi">${esc(c.fi.p)}</p><p class="ren">${esc(c.en.p)}</p></div>`).join('')}</div>
+        <div class="rstake">${esc(RULES.stake.fi)}<br><span>${esc(RULES.stake.en)}</span></div></div>`;break;
     case 'intro':
       h=`<div class="intro3"><div class="ihead">${head}</div>${twoCol(sc.fi.n,sc.en.n)}${art('scene'+(S.scene+1),'sq3')}</div>`;break;
     case 'vote':
@@ -433,7 +441,7 @@ function renderDm(){
   const sig=[S.runId,S.phase,S.scene,armReset?1:0,drumming()?1:0].join('|');
   if(sig===dmSig){const c=$('#dmConn');if(c){c.className='conn '+(connected?'on':'off');c.textContent=connTxt;}return;}
   dmSig=sig;
-  const labels={lobby:'begin',intro:'openVote',vote:'closeVote',roll:'reveal',rescue:'endRescue',result:S.scene<SCENES.length-1?'next':'finale',ending:'showAwards',awards:'showStory',story:'newGame'};
+  const labels={lobby:'showRules',rules:'begin',intro:'openVote',vote:'closeVote',roll:'reveal',rescue:'endRescue',result:S.scene<SCENES.length-1?'next':'finale',ending:'showAwards',awards:'showStory',story:'newGame'};
   let mid='';
   if(false){}
   else if(S.phase==='roll')mid=`<button class="btn ghost small" id="dmGuild" type="button">🎲 ${esc(tf('guildDie'))}</button>`;

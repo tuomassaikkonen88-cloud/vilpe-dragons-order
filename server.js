@@ -72,7 +72,8 @@ function checkAuto() {
 }
 function advance() {
   switch (H.phase) {
-    case 'lobby': H.phase = 'intro'; H.scene = 0; break;
+    case 'lobby': H.phase = 'rules'; break;
+    case 'rules': H.phase = 'intro'; H.scene = 0; break;
     case 'intro': H.phase = 'vote'; H.hand = [0, 0, 0]; H.deadline = Date.now() + 45000; break;
     case 'vote': {
       const tl = liveTally(); H.tally = tl; const max = Math.max(...tl);
