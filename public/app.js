@@ -336,8 +336,7 @@ function renderHost(){
         ${art('lobby','sq')}</div>`;
       break;
     case 'rules':
-      h=`<div class="rulespage"><div class="rbanner"><div class="eyebrow">${BI('Ennen kuin seikkailu alkaa','Before the adventure begins')}</div><h2 class="stitle">${BS(RULES.title.fi,RULES.title.en)}</h2>
-          <div class="bicols rq"><div class="bcol"><p class="narr">${esc(RULES.quest.fi)}</p></div><div class="bcol"><p class="narr be-n">${esc(RULES.quest.en)}</p></div></div></div>
+      h=`<div class="rulespage"><div class="rbanner"><div class="eyebrow">${BI('Ennen kuin seikkailu alkaa','Before the adventure begins')}</div><h2 class="stitle">${BS(RULES.title.fi,RULES.title.en)}</h2></div>
         <div class="rgrid">${RULES.cards.map((c,i)=>`<div class="rcard2" style="--d:${(0.3+i*0.25).toFixed(2)}s"><div class="rch"><span class="ric">${c.ic}</span><span class="rct">${esc(c.fi.t)}<span> · ${esc(c.en.t)}</span></span></div>
           <p class="rfi">${esc(c.fi.p)}</p><p class="ren">${esc(c.en.p)}</p></div>`).join('')}</div>
         <div class="rstake">${esc(RULES.stake.fi)}<br><span>${esc(RULES.stake.en)}</span></div></div>`;break;
