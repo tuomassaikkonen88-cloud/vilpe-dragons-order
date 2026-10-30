@@ -312,7 +312,7 @@ function renderHost(){
   const stage=$('#hostStage');
   const sig=[S.runId,S.phase,S.scene,S.winner,drum?'drum':''].join('|');
   const live={vote:updateVote,roll:updateRoll,rescue:updateRescue}[S.phase];
-  if((live||drum||S.phase==='awards'||S.phase==='story')&&stage.dataset.sig===sig){if(live)live();renderDm();return;}
+  if((live||drum||S.phase==='awards'||S.phase==='story'||S.phase==='rules')&&stage.dataset.sig===sig){if(live)live();renderDm();return;}
   if(S.phase==='awards')awardsRecv=Date.now();
   let h='';
   switch(S.phase){
