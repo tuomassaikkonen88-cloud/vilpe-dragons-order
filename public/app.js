@@ -160,7 +160,10 @@ function playerBody(me,my){
     case 'ending':case 'awards':{
       const e=S.ending?ENDINGS[S.ending.id]:null;let a='';
       if(S.phase==='awards'&&S.awards){
-        a=`<div class="eyebrow">${esc(t('awards'))}</div>`+S.awards.map(x=>`<div class="hero" style="padding:8px 12px"><div><small class="muted">${esc(t('aw_'+x.k))}</small><div class="nm">${esc(x.n)}</div>${x.n===me.n?`<b class="t-legendary">${esc(t('youWon'))}</b>`:''}</div></div>`).join('');
+        if(Date.now()<localDeadline){a=`<div class="awwatch">${esc(t('awardsWatch'))}</div>`;clearTimeout(window._awT);window._awT=setTimeout(renderPlayer,localDeadline-Date.now()+200);}
+        else{const mine=(S.stats||[]).find(p=>p.n===me.n&&p.c===me.c);
+        a=`<div class="eyebrow">${esc(t('awards'))}</div>`+S.awards.slice().reverse().map(x=>`<div class="hero" style="padding:8px 12px"><span class="ic" style="font-size:1.6rem">${AWI[x.k]||'🏅'}</span><div><small class="muted">${esc(t('aw_'+x.k))}</small><div class="nm">${esc(x.n)}</div>${x.n===me.n?`<b class="t-legendary">${esc(t('youWon'))}</b>`:''}</div></div>`).join('')
+          +(mine?`<div class="eyebrow">${esc(t('yourStats'))}</div><div class="mystats"><span>${esc(t('colAvg'))} <b>${mine.avg}</b></span><span>🎯 <b>${mine.pts}</b></span><span>🪙 <b>${mine.co}</b></span><span>✨ <b>${mine.in}</b></span><span>🔥 <b>${mine.st}</b></span><span>🎲20 <b>${mine.n20}</b></span></div>`:'');}
       }
       return `<div class="card"><div class="eyebrow">${esc(t('theEnd'))}</div>${e?`<h2>${esc(L(e).t)}</h2>${S.ending?`<div class="deltas"><span class="delta ${S.ending.v>=10000?'up':'down'}">${esc(t('endStats'))} ${fmt(S.res.v)} ${esc(t('ofOrder'))}</span><span class="delta">${esc(t('mood'))}: ${esc(moodWord(S.res.m))}</span></div>`:''}<div class="narr">${esc(L(e).n)}</div>`:''}${a}</div>`;}
   }
@@ -299,7 +302,8 @@ function renderHost(){
   const stage=$('#hostStage');
   const sig=[S.runId,S.phase,S.scene,S.winner,drum?'drum':''].join('|');
   const live={vote:updateVote,roll:updateRoll,rescue:updateRescue}[S.phase];
-  if((live||drum)&&stage.dataset.sig===sig){if(live)live();renderDm();return;}
+  if((live||drum||S.phase==='awards')&&stage.dataset.sig===sig){if(live)live();renderDm();return;}
+  if(S.phase==='awards')awardsRecv=Date.now();
   let h='';
   switch(S.phase){
     case 'lobby':
@@ -357,9 +361,22 @@ function renderHost(){
         <div class="deltas"><span class="delta ${S.ending.v>=10000?'up':'down'}">${fmtFi(S.res.v)} / 10 000 ${BI('tuuletinta','vents')}</span><span class="delta">${bki('mood')}: ${BI(tf(moodKey(S.res.m)),te(moodKey(S.res.m)))}</span></div></div>
         ${twoCol(e.fi.n,e.en.n,'end')}${art('ending-'+S.ending.id,'sq3')}</div>`;break;}
     case 'awards':{
-      const e=ENDINGS[S.ending.id];
-      h=`<div style="display:grid;gap:22px"><div><div class="eyebrow">${BI(e.fi.t,e.en.t)}</div><h2 class="stitle awtitle">${bks('awards')}</h2></div>
-        <div class="awards">${(S.awards||[]).map(a=>`<div class="award"><span class="t">${bki('aw_'+a.k)}</span><span class="w">${esc(a.n)}</span>${a.x?`<span class="ax num">${a.k==='rich'?'🪙 '+a.x:a.k==='insp'?'✨ '+a.x:'🛟 '+a.x+' '+esc(tf('rescuePts'))}</span>`:''}</div>`).join('')||`<span class="muted">—</span>`}</div></div>`;break;}
+      const e=ENDINGS[S.ending.id],aws=S.awards||[],st=S.stats||[];
+      const revealMs=S.reveal||1,elapsed=(revealMs-(+S.left||0))/1000+(Date.now()-awardsRecv)/1000;
+      const step=1.5,regs=aws.filter(a=>a.k!=='mvp'),mvp=aws.find(a=>a.k==='mvp');
+      const dl=i=>(1.2+i*step-elapsed).toFixed(2);
+      const mvpAt=1.2+regs.length*step+2.6;
+      const card=(a,i)=>`<div class="awc" style="--d:${dl(i)}s"><div class="qm" aria-hidden="true">?</div><div class="front">
+        <div class="awic">${AWI[a.k]||'🏅'}</div><div class="awtx"><span class="t">${bki('aw_'+a.k)}</span><span class="w">${a.c&&cls(a.c)?cls(a.c).ic+' ':''}${esc(a.n)}</span><span class="ax">${awVal(a)}</span></div></div></div>`;
+      const max=Math.max(1,...st.map(p=>p.pts));
+      h=`<div class="awstage"><div class="awleft"><div class="awhead"><div class="eyebrow">${BI(e.fi.t,e.en.t)}</div><h2 class="stitle awtitle">${bks('awards')}</h2></div>
+        <div class="awgrid">${regs.map(card).join('')}</div>
+        ${mvp?`<div class="mvpb" style="--d0:${(mvpAt-2.6-elapsed).toFixed(2)}s;--d:${(mvpAt-elapsed).toFixed(2)}s"><div class="mvpq">👑 ${bks('mvpSuspense')}</div>
+          <div class="mvpf"><span class="mvpcrown">👑</span><div class="awtx"><span class="t">${bki('aw_mvp')}</span><span class="w">${mvp.c&&cls(mvp.c)?cls(mvp.c).ic+' ':''}${esc(mvp.n)}</span><span class="ax">${awVal(mvp)}</span></div></div></div>`:''}</div>
+        <aside class="awstats"><div class="eyebrow">${bki('statsTitle')}</div>
+          <div class="strow sthead"><span>#</span><span></span><span>${esc(tf('colAvg'))}</span><span>🪙</span><span>✨</span><span>🔥</span></div>
+          ${st.map((p,i)=>`<div class="strow" style="--w:${Math.round(p.pts/max*100)}%"><span class="num">${i+1}</span><span class="sn">${cls(p.c)?cls(p.c).ic:''} ${esc(p.n)}</span><span class="num">${p.avg}</span><span class="num">${p.co}</span><span class="num">${p.in}</span><span class="num">${p.st}</span></div>`).join('')}
+        </aside></div>`;break;}
   }
   const fadeSig=S.phase+S.scene+(drum?'d':'');
   if(stage.dataset.fade!==fadeSig){stage.classList.remove('fade-in');void stage.offsetWidth;stage.classList.add('fade-in');}
@@ -368,6 +385,17 @@ function renderHost(){
   if(live)live();
   renderDm();
 }
+const AWI={snack:'🍗',fumble:'🤦',cold:'🧊',rebel:'🏴',gen:'🛟',insp:'✨',rich:'🪙',streak:'🔥',luck:'🍀',mvp:'👑'};
+let awardsRecv=Date.now();
+function awVal(a){const x=a.x;switch(a.k){
+  case 'mvp':case 'snack':return `${x} ${BI(tf('av_pts'),te('av_pts'))}`;
+  case 'fumble':return `${x} × ${BI(tf('av_n1'),te('av_n1'))}`;
+  case 'luck':return a.hi?`${BI(tf('av_hi'),te('av_hi'))}: ${x}`:`${x} × ${BI(tf('av_n20'),te('av_n20'))}`;
+  case 'cold':return `${x} ${BI(tf('av_cd'),te('av_cd'))}`;
+  case 'streak':return `${x} ${BI(tf('av_st'),te('av_st'))}`;
+  case 'rebel':return `${x} ${BI(tf('av_rb'),te('av_rb'))}`;
+  case 'gen':return `${x} ${BI(tf('av_gv'),te('av_gv'))}`;
+  case 'rich':return `${x} 🪙`;case 'insp':return `${x} ✨`;}return '';}
 let dmSig='';
 function renderDm(){
   const bar=$('#dmBar');if(!S){dmSig='';bar.innerHTML=`<span class="tag">DM</span><span class="conn off">● ${esc(tf('reconnecting'))}</span>`;return;}
