@@ -162,7 +162,7 @@ function playerBody(me,my){
       if(S.phase==='awards'&&S.awards){
         a=`<div class="eyebrow">${esc(t('awards'))}</div>`+S.awards.map(x=>`<div class="hero" style="padding:8px 12px"><div><small class="muted">${esc(t('aw_'+x.k))}</small><div class="nm">${esc(x.n)}</div>${x.n===me.n?`<b class="t-legendary">${esc(t('youWon'))}</b>`:''}</div></div>`).join('');
       }
-      return `<div class="card"><div class="eyebrow">${esc(t('theEnd'))}</div>${e?`<h2>${esc(L(e).t)}</h2>${S.ending?`<div class="deltas"><span class="delta ${S.ending.v>=10000?'up':'down'}">${esc(t('endStats'))} ${fmt(S.res.v)} ${esc(t('ofOrder'))}</span><span class="delta">${esc(t('mood'))}: ${esc(moodWord(S.res.m))}</span><span class="delta">${esc(t('gold'))}: ${fmt(S.res.g)}</span></div>`:''}<div class="narr">${esc(L(e).n)}</div>`:''}${a}</div>`;}
+      return `<div class="card"><div class="eyebrow">${esc(t('theEnd'))}</div>${e?`<h2>${esc(L(e).t)}</h2>${S.ending?`<div class="deltas"><span class="delta ${S.ending.v>=10000?'up':'down'}">${esc(t('endStats'))} ${fmt(S.res.v)} ${esc(t('ofOrder'))}</span><span class="delta">${esc(t('mood'))}: ${esc(moodWord(S.res.m))}</span></div>`:''}<div class="narr">${esc(L(e).n)}</div>`:''}${a}</div>`;}
   }
   return '';
 }
@@ -354,7 +354,7 @@ function renderHost(){
       const e=ENDINGS[S.ending.id];
       h=`<div class="intro3 ending"><div class="ihead"><div class="eyebrow">${bki('theEnd')}</div>
         <h2 class="stitle" style="color:var(--gold)">${BS(e.fi.t,e.en.t)}</h2>
-        <div class="deltas"><span class="delta ${S.ending.v>=10000?'up':'down'}">${fmtFi(S.res.v)} / 10 000 ${BI('tuuletinta','vents')}</span><span class="delta">${bki('mood')}: ${BI(tf(moodKey(S.res.m)),te(moodKey(S.res.m)))}</span><span class="delta">${bki('gold')}: ${fmtFi(S.res.g)}</span></div></div>
+        <div class="deltas"><span class="delta ${S.ending.v>=10000?'up':'down'}">${fmtFi(S.res.v)} / 10 000 ${BI('tuuletinta','vents')}</span><span class="delta">${bki('mood')}: ${BI(tf(moodKey(S.res.m)),te(moodKey(S.res.m)))}</span></div></div>
         ${twoCol(e.fi.n,e.en.n,'end')}${art('ending-'+S.ending.id,'sq3')}</div>`;break;}
     case 'awards':{
       const e=ENDINGS[S.ending.id];
