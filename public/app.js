@@ -159,11 +159,11 @@ function playerBody(me,my){
        <div class="narr">${esc(oc.tier==='fail'||oc.tier==='severe'?L(o).l:L(o).w)}</div>${deltaHtml(oc.delta,oc.share)}${lootHtml(me)}
        <div class="muted num">${esc(t('groupAvg'))}: ${oc.avg} · ${esc(t('dc'))} ${oc.dc}</div></div>`;}
     case 'story':{
-      const st=storyOf(S.log,lang,storyInfo());
-      return `<div class="card pstory"><div class="eyebrow">${esc(st.prologue.t)}</div><div class="muted">${esc(t('storyWatch'))}</div>
-        <p class="narr">${esc(st.prologue.p)}</p>
-        ${st.chapters.map(c=>`<div class="pchap"><div class="eyebrow">${esc(c.label)} · <span class="t-${c.tier}">${esc(t('tl_'+c.tier))}</span></div><h3>${esc(c.t)}</h3><p class="narr">${esc(c.p)}</p></div>`).join('')}
-        <div class="pchap"><div class="eyebrow">${esc(st.epilogue.label)}</div><h3 class="t-legendary">${esc(st.epilogue.t)}</h3><p class="narr">${esc(st.epilogue.p)}</p><p class="narr"><i>${esc(st.epilogue.fin)}</i></p></div></div>`;}
+      const log=S.log||[],e=S.ending&&ENDINGS[S.ending.id],mvp=((S.awards||[]).find(a=>a.k==='mvp'))||null;
+      return `<div class="card pstory"><div class="eyebrow">${esc(lang==='fi'?'Killan tarina':'The Tale of the Guild')}</div>
+        ${e?`<h2 class="t-legendary">${esc(L(e).t)}</h2>`:''}${mvp?`<div>👑 <b>${esc(mvp.n)}</b></div>`:''}
+        ${log.map(x=>{const sc=SCENES[x.s],o=sc.o[x.w];return `<div class="pchap"><div class="eyebrow">${esc(t('scene'))} ${x.s+1} · <span class="t-${x.tier}">${esc(t('tl_'+x.tier))}</span></div><b>${esc(L(sc).t)}</b><span class="muted">»${esc(L(o).t)}«${x.hero?` · ⭐ ${esc(x.hero.n)} ${x.hero.t}`:''}${x.rescued?` · 🛟 +${x.pts}`:''}</span></div>`;}).join('')}
+        <p class="narr"><i>${esc(STORYFIN[lang])}</i></p></div>`;}
     case 'ending':case 'awards':{
       const e=S.ending?ENDINGS[S.ending.id]:null;let a='';
       if(S.phase==='awards'&&S.awards){
@@ -211,7 +211,8 @@ function deltaBi(d,share){
   if(d.m)o.push(`<span class="delta ${d.m>0?'up':'down'}">${d.m>0?'+':''}${d.m} ${BI('mieliala','mood')}</span>`);
   return o.length?`<div class="deltas">${o.join('')}</div>`:'';
 }
-const art=(name,cls)=>`<figure class="art ${cls||''}"><img src="/img/${name}.jpg" alt="" onerror="this.closest('figure').hidden=true"></figure>`;
+const FOCUS={scene1:28,scene2:46,scene3:50,scene4:32,scene5:65,scene6:28,scene7:72,scene8:42,scene9:32};
+const art=(name,cls)=>`<figure class="art ${cls||''}"><img src="/img/${name}.jpg?v=${S&&S.iv||''}" style="object-position:50% ${FOCUS[name]??45}%" alt="" onerror="this.closest('figure').hidden=true"></figure>`;
 function duelHtml(dc,avg,tier){
   const lo=Math.max(0,dc-11),max=dc+9,pct=v=>clamp((v-lo)/(max-lo)*100,0,100);
   const zones=[['severe',lo,dc-6],['fail',dc-6,dc-3],['partial',dc-3,dc],['success',dc,dc+5],['legendary',dc+5,max]];
@@ -307,8 +308,7 @@ function renderHost(){
   const chosen=()=>{const o=sc.o[S.winner];return `<div class="hopt win"><div class="top"><span class="ttl">${esc(tf('chosen'))}: ${BS(o.fi.t,o.en.t,'sm')}</span></div>
         <div class="chips"><span class="pill">${tagBi(o.tag)}</span>${modChips(o.tag)}</div></div>`;};
   const stage=$('#hostStage');
-  const stN=S.phase==='story'?(S.log||[]).length+2:0,stI=S.phase==='story'?storySlide(stN):0;
-  const sig=[S.runId,S.phase,S.scene,S.winner,drum?'drum':'',stI].join('|');
+  const sig=[S.runId,S.phase,S.scene,S.winner,drum?'drum':''].join('|');
   const live={vote:updateVote,roll:updateRoll,rescue:updateRescue}[S.phase];
   if((live||drum||S.phase==='awards'||S.phase==='story')&&stage.dataset.sig===sig){if(live)live();renderDm();return;}
   if(S.phase==='awards')awardsRecv=Date.now();
@@ -369,24 +369,21 @@ function renderHost(){
         <div class="deltas"><span class="delta ${S.ending.v>=10000?'up':'down'}">${fmtFi(S.res.v)} / 10 000 ${BI('tuuletinta','vents')}</span><span class="delta">${bki('mood')}: ${BI(tf(moodKey(S.res.m)),te(moodKey(S.res.m)))}</span></div></div>
         ${twoCol(e.fi.n,e.en.n,'end')}${art('ending-'+S.ending.id,'sq3')}</div>`;break;}
     case 'story':{
-      const fi=storyOf(S.log,'fi',storyInfo()),en=storyOf(S.log,'en',storyInfo());
-      const dots=`<div class="sdots">${Array.from({length:stN},(_,i)=>`<span class="${i===stI?'on':i<stI?'past':''}"></span>`).join('')}</div>`;
-      const tierB=k=>`<span class="tierb t-${k}">${BI(tf('tier_'+k),te('tier_'+k))}</span>`;
-      if(stI===0){
-        h=`<div class="intro3 story"><div class="ihead"><div class="eyebrow">${BI('Seikkailun kertaus','The story so far')}</div><h2 class="stitle">${BS(fi.prologue.t,en.prologue.t)}</h2>
-          <div class="chips">${(S.stats||[]).map(p=>`<span class="chip"><span>${cls(p.c)?cls(p.c).ic:''}</span><span class="nm">${esc(p.n)}</span></span>`).join('')}</div></div>
-          ${twoCol(fi.prologue.p,en.prologue.p)}${art('lobby','sq3')}</div>${dots}`;
-      }else if(stI<=fi.chapters.length){
-        const c=fi.chapters[stI-1],ce=en.chapters[stI-1];
-        h=`<div class="intro3 story"><div class="ihead"><div class="eyebrow">${BI(c.label,ce.label)}</div><h2 class="stitle">${BS(c.t,ce.t)}</h2>
-          <div class="sbadges">${tierB(c.tier)}${c.hero?`<span class="chip c20">⭐ ${cls(c.hero.c)?cls(c.hero.c).ic+' ':''}<span class="nm">${esc(c.hero.n)}</span><span class="r num">${c.hero.t}</span></span>`:''}</div></div>
-          ${twoCol(c.p,ce.p,'stext')}${art('scene'+c.i,'sq3')}</div>${dots}`;
-      }else{
-        const mvp=((S.awards||[]).find(a=>a.k==='mvp'))||null;
-        h=`<div class="intro3 story"><div class="ihead"><div class="eyebrow">${BI(fi.epilogue.label,en.epilogue.label)}</div><h2 class="stitle" style="color:var(--gold)">${BS(fi.epilogue.t,en.epilogue.t)}</h2>
-          ${mvp?`<div class="sbadges"><span class="chip c20">👑 ${cls(mvp.c)?cls(mvp.c).ic+' ':''}<span class="nm">${esc(mvp.n)}</span></span></div>`:''}</div>
-          ${twoCol(fi.epilogue.p+' '+fi.epilogue.fin,en.epilogue.p+' '+en.epilogue.fin,'stext')}${art('ending-'+S.ending.id,'sq3')}</div>${dots}`;
-      }
+      const log=S.log||[],e=ENDINGS[S.ending.id],mvp=((S.awards||[]).find(a=>a.k==='mvp'))||null;
+      const c20=log.reduce((a,x)=>a+(x.crit||[]).length,0),resc=log.filter(x=>x.rescued).length;
+      const card=(x,i)=>{const sc=SCENES[x.s],o=sc.o[x.w];return `<div class="schap" style="--d:${(0.4+i*0.35).toFixed(2)}s">
+        ${art('scene'+(x.s+1),'sthumb')}
+        <div class="sctx"><span class="eyebrow">${BI(tf('scene')+' '+(x.s+1),te('scene')+' '+(x.s+1))}</span>
+          <b class="sct">${esc(sc.fi.t)}</b><span class="sce">${esc(sc.en.t)}</span>
+          <span class="scp">»${esc(o.fi.t)}«</span>
+          <span class="scb"><span class="tierb sm t-${x.tier}">${esc(tf('tl_'+x.tier))}</span>${x.hero?`<span class="chip c20">⭐ <span class="nm">${esc(x.hero.n)}</span><span class="r num">${x.hero.t}</span></span>`:''}${x.rescued?`<span class="chip">🛟 +${x.pts}</span>`:''}${(x.crit||[]).length?`<span class="chip">🎲20 ×${x.crit.length}</span>`:''}</span></div></div>`;};
+      const fi=STORYFIN.fi,en=STORYFIN.en;
+      h=`<div class="storypage"><div class="sbanner">${art('ending-'+S.ending.id,'sendimg')}
+          <div class="sbtx"><span class="eyebrow">${BI('Killan tarina','The Tale of the Guild')}</span>
+          <h2 class="stitle" style="color:var(--gold)">${BS(e.fi.t,e.en.t)}</h2>
+          <div class="sbadges">${mvp?`<span class="chip c20">👑 ${cls(mvp.c)?cls(mvp.c).ic+' ':''}<span class="nm">${esc(mvp.n)}</span></span>`:''}<span class="chip">🧑‍🤝‍🧑 ${(S.stats||[]).length}</span><span class="chip">🎲20 ×${c20}</span><span class="chip">🛟 ×${resc}</span></div>
+          <p class="sfin">${esc(fi)}<br><span>${esc(en)}</span></p></div></div>
+        <div class="sgrid">${log.map(card).join('')}</div></div>`;
       break;}
     case 'awards':{
       const e=ENDINGS[S.ending.id],aws=S.awards||[],st=S.stats||[];
@@ -417,6 +414,7 @@ function renderHost(){
 const storyInfo=()=>({seed:S.runId,players:(S.stats||[]).length,ending:S.ending&&S.ending.id,vents:S.res.v,mood:S.res.m,mvp:((S.awards||[]).find(a=>a.k==='mvp')||{}).n});
 const STORY_PRO=9,STORY_CH=14;
 function storySlide(n){const el=(S.storyMs||0)/1000+(Date.now()-storyRecv)/1000;const auto=el<STORY_PRO?0:1+Math.floor((el-STORY_PRO)/STORY_CH);return clamp(auto+storyOff,0,n-1);}
+const STORYFIN={fi:'Tärkeintä ei koskaan ollut määränpää, vaan matka – ja tarinat, joita siitä kerrotaan vielä ensi Halloweenina.',en:'It was never about the destination. It was about the journey, and the stories that will still be told next Halloween.'};
 const AWI={snack:'🍗',fumble:'🤦',cold:'🧊',rebel:'🏴',gen:'🛟',insp:'✨',rich:'🪙',streak:'🔥',luck:'🍀',mvp:'👑'};
 let awardsRecv=Date.now();
 function awVal(a){const x=a.x;switch(a.k){
@@ -439,7 +437,6 @@ function renderDm(){
   let mid='';
   if(false){}
   else if(S.phase==='roll')mid=`<button class="btn ghost small" id="dmGuild" type="button">🎲 ${esc(tf('guildDie'))}</button>`;
-  else if(S.phase==='story')mid=`<button class="btn ghost small" id="stPrev" type="button">◀ ${esc(tf('storyNav'))}</button><button class="btn ghost small" id="stNext" type="button">${esc(tf('storyNav'))} ▶</button>`;
   bar.innerHTML=`<span class="tag">DM</span><span id="dmConn" class="conn ${connected?'on':'off'}">${esc(connTxt)}</span>${mid}<span class="grow"></span>
     <button class="btn ghost small" id="dmFs" type="button">${esc(tf('fullscreen'))}</button>
     ${S.phase!=='lobby'&&S.phase!=='awards'&&S.phase!=='story'?`<button class="btn ghost small" id="dmReset" type="button">${esc(armReset?tf('sure'):tf('newGame'))}</button>`:''}
@@ -448,7 +445,6 @@ function renderDm(){
   $('#dmFs').onclick=()=>{try{const p=document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();p&&p.catch&&p.catch(()=>{});}catch(e){}};
   const rs=$('#dmReset');if(rs)rs.onclick=()=>{if(armReset){armReset=false;dmSig='';host('reset');}else{armReset=true;renderDm();setTimeout(()=>{if(armReset){armReset=false;renderDm();}},4000);}};
   const gd=$('#dmGuild');if(gd)gd.onclick=()=>host('guild');
-  const sp=$('#stPrev'),sn=$('#stNext');if(sp)sp.onclick=()=>{storyOff--;renderHost();};if(sn)sn.onclick=()=>{storyOff++;renderHost();};
 }
 
 
@@ -496,7 +492,6 @@ function initEmbers(){
 
 // scale the TV layout (designed at 1920x1080) to fit any screen or display-scaling setting
 function fitTv(){const z=Math.min(innerWidth/1920,innerHeight/1080);document.documentElement.classList.add('tvfit');const h=$('#host');h.style.zoom=z;h.style.minHeight=(innerHeight/z)+'px';}
-setInterval(()=>{if(isHost&&S&&S.phase==='story')renderHost();},500);
 if(isHost){fitTv();addEventListener('resize',fitTv);initEmbers();makeQr();setInterval(()=>fetch('/healthz').catch(()=>{}),4*60*1000);}
 render();connect();
 })();

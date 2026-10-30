@@ -8,6 +8,8 @@ const G = require('./public/data.js');
 const PORT = process.env.PORT || 3000;
 const HOST_KEY = process.env.HOST_KEY || 'dragon';
 const PUB = path.join(__dirname, 'public');
+// image version: changes whenever any image file changes, so browsers never show stale cached art
+const IMGV = (() => { try { return fs.readdirSync(path.join(__dirname, 'public', 'img')).map(f => { const st = fs.statSync(path.join(__dirname, 'public', 'img', f)); return f + st.size + st.mtimeMs; }).join('').split('').reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7).toString(36); } catch (e) { return String(Date.now()); } })();
 const STATIC = {
   '/': ['app.html', 'text/html; charset=utf-8'],
   '/host': ['app.html', 'text/html; charset=utf-8'],
@@ -201,7 +203,7 @@ function publicState() {
     roll: H.phase === 'rescue' && H.roll ? { sum: H.roll.sum, n: H.roll.n, avg: Math.round(H.roll.avg * 10) / 10, tier0: H.roll.tier0, dc: H.roll.dc } : null,
     rescue: H.phase === 'rescue' && H.rescue ? { pts: H.rescue.pts, target: H.rescue.target, thr: H.rescue.thr, need: rescueNeed(),
       givers: Object.values(H.rescue.givers).sort((a, b) => b.pts - a.pts).slice(0, 12) } : null,
-    left: Math.max(0, H.deadline - Date.now()), ending: H.ending, awards: H.awards, stats: (H.phase === 'awards' || H.phase === 'story') ? H.stats : null, storyMs: H.phase === 'story' ? Date.now() - H.storyAt : 0, reveal: H.reveal || 0, guild: H.guild, lastRolls: H.lastRolls, log: H.log,
+    left: Math.max(0, H.deadline - Date.now()), ending: H.ending, awards: H.awards, stats: (H.phase === 'awards' || H.phase === 'story') ? H.stats : null, storyMs: H.phase === 'story' ? Date.now() - H.storyAt : 0, iv: IMGV, reveal: H.reveal || 0, guild: H.guild, lastRolls: H.lastRolls, log: H.log,
     players: listed().map(p => ({ id: p.pub, n: p.n, c: p.c, voted: !!(p.vote && p.vote.k === k), r: p.roll && p.roll.k === k ? p.roll.r : null, st: p.streak, cd: p.cold, done: p.done === k })),
   };
 }

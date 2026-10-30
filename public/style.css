@@ -431,3 +431,26 @@ html.tvfit .award .ax{font-size:1.3rem}
 .pstory h3{font-family:var(--f-display);font-size:1.4rem;margin:0}
 .pstory .narr{margin:0;font-size:1rem}
 .intro3.story{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,min(calc(31*var(--vw)),calc(100*var(--vh) - 520px)))}
+/* ---- one-page story recap ---- */
+.storypage{display:grid;grid-template-rows:auto 1fr;gap:16px;flex:1;min-height:0}
+.sbanner{display:flex;gap:24px;align-items:center;background:linear-gradient(100deg,rgba(230,185,79,.12),rgba(240,136,58,.05));border:1.5px solid rgba(230,185,79,.45);border-radius:18px;padding:14px 20px;animation:fi .6s ease both}
+.sbanner .art.sendimg{flex:none;width:150px;border-radius:12px;box-shadow:none}
+.sbanner .art.sendimg img{aspect-ratio:1/1}
+.sbtx{display:grid;gap:6px;min-width:0}
+.sbtx .stitle{font-size:2.8rem}
+.sfin{margin:0;font-style:italic;font-size:1.15rem;color:var(--parch)}
+.sfin span{color:var(--muted);font-size:.92em}
+.sgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:minmax(0,1fr);gap:12px;min-height:0}
+.schap{display:flex;gap:14px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 12px;min-width:0;min-height:0;overflow:hidden;animation:flipin .6s cubic-bezier(.2,.9,.3,1.2) var(--d) both}
+.schap .art.sthumb{flex:none;width:118px;border-radius:10px;box-shadow:none}
+.schap .art.sthumb img{aspect-ratio:1/1;object-position:50% 50% !important}
+.sctx{display:grid;gap:2px;min-width:0}
+.sct{font-family:var(--f-display);font-size:1.45rem;line-height:1.05}
+.sce{color:var(--muted);font-size:.9rem;font-weight:700}
+.scp{font-size:.95rem;line-height:1.25;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.scb{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:3px}
+.scb .chip{font-size:.85rem;padding:2px 7px}
+.tierb.sm{font-size:1.05rem;padding:.05em .45em}
+.pstory .pchap{display:grid;gap:2px;padding-top:10px;border-top:1px solid var(--line)}
+/* voting strip: a little taller so focus points have room */
+.art.small img{aspect-ratio:2.2/1}
