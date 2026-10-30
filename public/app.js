@@ -374,8 +374,9 @@ function renderHost(){
         ${mvp?`<div class="mvpb" style="--d0:${(mvpAt-2.6-elapsed).toFixed(2)}s;--d:${(mvpAt-elapsed).toFixed(2)}s"><div class="mvpq">👑 ${bks('mvpSuspense')}</div>
           <div class="mvpf"><span class="mvpcrown">👑</span><div class="awtx"><span class="t">${bki('aw_mvp')}</span><span class="w">${mvp.c&&cls(mvp.c)?cls(mvp.c).ic+' ':''}${esc(mvp.n)}</span><span class="ax">${awVal(mvp)}</span></div></div></div>`:''}</div>
         <aside class="awstats"><div class="eyebrow">${bki('statsTitle')}</div>
-          <div class="strow sthead"><span>#</span><span></span><span>${esc(tf('colAvg'))}</span><span>🪙</span><span>✨</span><span>🔥</span></div>
-          ${st.map((p,i)=>`<div class="strow" style="--w:${Math.round(p.pts/max*100)}%"><span class="num">${i+1}</span><span class="sn">${cls(p.c)?cls(p.c).ic:''} ${esc(p.n)}</span><span class="num">${p.avg}</span><span class="num">${p.co}</span><span class="num">${p.in}</span><span class="num">${p.st}</span></div>`).join('')}
+          <div class="strow sthead"><span>#</span><span></span><span>🎯</span><span>🎲</span><span>🪙</span><span>✨</span><span>🔥</span></div>
+          <div class="strows">${st.map((p,i)=>`<div class="strow" style="--w:${Math.round(p.pts/max*100)}%"><span class="num">${i+1}</span><span class="sn">${cls(p.c)?cls(p.c).ic:''} ${esc(p.n)}</span><span class="num stp">${p.pts}</span><span class="num">${p.avg}</span><span class="num">${p.co}</span><span class="num">${p.in}</span><span class="num">${p.st}</span></div>`).join('')}</div>
+          <div class="stlegend">🎯 ${BI('pisteet','points')} · 🎲 ${BI('d20 keskiarvo','avg d20')} · 🔥 ${BI('pisin osumaputki','best streak')}</div>
         </aside></div>`;break;}
   }
   const fadeSig=S.phase+S.scene+(drum?'d':'');

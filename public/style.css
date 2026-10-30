@@ -408,3 +408,12 @@ html.tvfit .award .ax{font-size:1.3rem}
 .awwatch{font-family:var(--f-display);font-size:1.6rem;color:var(--gold);text-align:center;padding:18px 0;animation:pulse 1.2s ease-in-out infinite}
 .mystats{display:flex;flex-wrap:wrap;gap:8px 14px;font-size:1rem}.mystats b{color:var(--gold)}
 @media (prefers-reduced-motion:reduce){.awc .front,.awc .qm,.mvpq,.mvpb .mvpf,.mvpcrown,.mvpb{animation-duration:.01s;animation-iteration-count:1}}
+/* stats table: fixed equal numeric columns, centred headers and values */
+.strow{grid-template-columns:1.7em minmax(0,1fr) repeat(5,2.7em);gap:4px;font-size:1rem}
+.strow span:nth-child(n+3){text-align:center}
+.strow span:first-child{text-align:center;color:var(--muted)}
+.sthead{font-size:1.05rem;letter-spacing:0;padding-block:2px 6px;border-bottom:1px solid var(--line);border-radius:0}
+.strow .stp{font-weight:800;color:var(--gold)}
+.strows{display:flex;flex-direction:column;gap:3px;flex:1;min-height:0}
+.stlegend{font-size:.82rem;color:var(--muted);line-height:1.4;padding-top:8px;border-top:1px solid var(--line)}
+.strow{background:linear-gradient(90deg,rgba(230,185,79,.10) var(--w,0%),transparent var(--w,0%))}.sthead{background:none}
