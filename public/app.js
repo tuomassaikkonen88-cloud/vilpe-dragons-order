@@ -292,6 +292,15 @@ function startSpin(dc){
     setDuel(v,dc);
   },90);
 }
+// Grow rule-card text until the fullest card is filled (works with whatever font the TV renders).
+function fitRules(){const pg=document.querySelector('.rulespage');if(!pg)return;
+  const cards=[...pg.querySelectorAll('.rcard2')];
+  const over=()=>cards.some(c=>c.scrollHeight>c.clientHeight+1)||document.documentElement.scrollHeight>window.innerHeight+1;
+  let lo=0.8,hi=1.8;
+  for(let i=0;i<9;i++){const m=(lo+hi)/2;pg.style.setProperty('--rk',m.toFixed(3));if(over())hi=m;else lo=m;}
+  pg.style.setProperty('--rk',(lo*0.97).toFixed(3));}
+addEventListener('resize',()=>{if(S&&S.phase==='rules')setTimeout(fitRules,50);});
+if(document.fonts)document.fonts.ready.then(()=>{if(S&&S.phase==='rules')fitRules();});
 function renderHost(){
   $('#host').hidden=false;
   if(badKey||!hostKey){$('#hostBand').innerHTML='';$('#dmBar').innerHTML='';$('#hostStage').innerHTML=`<div class="err">${esc(tf('hostKeyBad'))}<br>${esc(te('hostKeyBad'))}</div>`;return;}
@@ -416,6 +425,7 @@ function renderHost(){
   if(stage.dataset.fade!==fadeSig){stage.classList.remove('fade-in');void stage.offsetWidth;stage.classList.add('fade-in');}
   stage.dataset.fade=fadeSig;stage.dataset.sig=sig;
   stage.innerHTML=h;
+  if(S.phase==='rules'){fitRules();setTimeout(fitRules,2400);}
   if(live)live();
   renderDm();
 }
