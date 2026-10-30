@@ -1,5 +1,5 @@
 (function(){
-const {CLASSES,TAGS,SCENES,ENDINGS,T,cls,d20,rollTotal,tierOf,modOf}=window.GAME;
+const {CLASSES,TAGS,SCENES,ENDINGS,T,cls,d20,rollTotal,tierOf,modOf,TIERS}=window.GAME;
 const reduceMotion=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
 const $=s=>document.querySelector(s);
 const ls={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
@@ -16,9 +16,9 @@ const skillList=c=>Object.entries(c.sk).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<sp
 const modChips=tag=>[...CLASSES].sort((a,b)=>modOf(b.id,tag)-modOf(a.id,tag)).map(c=>`<span class="pill ${modCls(modOf(c.id,tag))}">${c.ic} ${sgn(modOf(c.id,tag))}</span>`).join('');
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const langSw=()=>`<div class="lang" role="group" aria-label="Language"><button type="button" data-lang="fi" aria-pressed="${lang==='fi'}">FI</button><button type="button" data-lang="en" aria-pressed="${lang==='en'}">EN</button></div>`;
-function deltaHtml(d){
+function deltaHtml(d,share){
   if(!d)return'';const o=[];
-  if(d.g)o.push(`<span class="delta ${d.g>0?'up':'down'}">${d.g>0?'+':''}${fmt(d.g)} ${esc(t('gold'))}</span>`);
+  if(share)o.push(`<span class="delta ${share>0?'up':'down'}">${share>0?'+':''}${share} 🪙</span>`);
   if(d.v)o.push(`<span class="delta ${d.v>0?'up':'down'}">${d.v>0?'+':''}${fmt(d.v)} ${lang==='fi'?'tuuletinta':'vents'}</span>`);
   if(d.m)o.push(`<span class="delta ${d.m>0?'up':'down'}">${d.m>0?'+':''}${d.m} ${lang==='fi'?'mieliala':'mood'}</span>`);
   return o.length?`<div class="deltas">${o.join('')}</div>`:'';
@@ -62,8 +62,12 @@ setInterval(()=>{
 
 /* ---------------- player ---------------- */
 let pickClass=null,rolling=false,pDrumUntil=0;
-const structKey=d=>[d.runId,d.phase,d.scene,d.winner,d.me?d.me.n+d.me.c+d.me.v+(d.me.r??''):'-',d.awards?1:0].join('|');
-function updatePlayerLive(){const el=document.getElementById('pconn');if(el){el.className='conn '+(connected?'on':'off');el.textContent='● '+(connected?t('live'):t('reconnecting'));}}
+const structKey=d=>[d.runId,d.phase,d.scene,d.winner,d.me?[d.me.n,d.me.c,d.me.v,d.me.r??'',d.me.coins,d.me.insp,d.me.done?1:0,d.me.st,d.me.cd].join(','):'-',d.awards?1:0,d.rescue&&d.rescue.need===0?1:0].join('|');
+function updatePlayerLive(){const el=document.getElementById('pconn');if(el){el.className='conn '+(connected?'on':'off');el.textContent='● '+(connected?t('live'):t('reconnecting'));}
+  const rn=document.getElementById('prNeed');if(rn&&S&&S.rescue){rn.innerHTML=S.rescue.need>0?`${esc(t('rescueNeed'))}: <b class="num">${S.rescue.need}</b> ${esc(t('rescuePts'))}`:`<b class="t-success">${esc(t('rescued'))}</b>`;}}
+function stashHtml(me){return `<div class="stash"><span class="sc">🪙 <b class="num">${me.coins||0}</b></span><span class="si">✨ <b class="num">${me.insp||0}</b></span>${me.st>=2?`<span class="streak hot">🔥 ${me.st} · ${esc(t('streakHot'))}</span>`:me.cd>=2?`<span class="streak cold">🧊 ${me.cd} · ${esc(t('streakCold'))}</span>`:''}</div>`;}
+function lootHtml(me){const l=me.loot;if(!l)return'';if(!l.c&&!l.i)return `<div class="loot muted">${esc(t('noLoot'))}</div>`;
+  return `<div class="loot"><span class="muted">${esc(t('lootGot'))}:</span> <b>+${l.c} 🪙</b> <b>+${l.i} ✨</b>${l.mult>1?` <span class="streak hot">🔥 ×${l.mult}</span>`:''}</div>`;}
 function renderPlayer(){
   $('#player').hidden=false;const root=$('#player');
   const keepName=document.getElementById('pname')?.value;
@@ -73,11 +77,11 @@ function renderPlayer(){
     root.innerHTML=h;return;
   }
   const me=S.me;
-  if(!me){
+  if(!me){document.body.classList.remove('onfire','oniced');
     h+=`<div class="card"><div class="muted">${esc(t('prologue'))}</div>
       <div class="field"><label for="pname">${esc(t('yourName'))}</label><input id="pname" maxlength="18" autocomplete="off" placeholder="${esc(t('namePh'))}" value="${esc(keepName||ls.get('vf_name',''))}"></div>
       <div class="field"><span style="font-weight:800">${esc(t('pickClass'))}</span><div class="classes">
-      ${CLASSES.map(c=>`<button type="button" class="cls" data-cls="${c.id}" aria-pressed="${pickClass===c.id}"><span class="ic">${c.ic}</span><b>${esc(L(c))}</b><span class="sklist">${skillList(c)}</span></button>`).join('')}
+      ${CLASSES.map(c=>`<button type="button" class="cls" data-cls="${c.id}" aria-pressed="${pickClass===c.id}"><span class="ic">${c.ic}</span><b>${esc(L(c))}</b><small class="lootcls">${esc(t('lootClass'))}: ${c.loot==='coin'?'🪙 +3':'✨ +2'}</small><span class="sklist">${skillList(c)}</span></button>`).join('')}
       </div></div>
       <button class="btn" id="pjoin" type="button">${esc(t('joinBtn'))}</button><span id="pconn" class="conn center"></span></div>`;
     root.innerHTML=h;
@@ -93,7 +97,8 @@ function renderPlayer(){
     updatePlayerLive();return;
   }
   const c=cls(me.c);
-  h+=`<div class="hero"><span class="ic">${c.ic}</span><div><div class="nm">${esc(me.n)}</div><small class="muted">${esc(L(c))}</small><div class="sklist row">${skillList(c)}</div></div></div>`;
+  document.body.classList.toggle('onfire',me.st>=2);document.body.classList.toggle('oniced',me.cd>=2&&!(me.st>=2));
+  h+=`<div class="hero"><span class="ic">${c.ic}</span><div style="min-width:0"><div class="nm">${esc(me.n)}</div><small class="muted">${esc(L(c))} · ${esc(t('lootClass'))}: ${c.loot==='coin'?'🪙 +3':'✨ +2'}</small><div class="sklist row">${skillList(c)}</div>${stashHtml(me)}</div></div>`;
   h+=playerBody(me,c);
   h+=`<div class="center" style="display:grid;gap:4px"><span id="pconn" class="conn"></span><button class="linkbtn" id="pchange" type="button">${esc(t('change'))}</button></div>`;
   root.innerHTML=h;
@@ -102,6 +107,8 @@ function renderPlayer(){
     const v=+b.dataset.vote;root.querySelectorAll('[data-vote]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
     const r=await api('vote',{pid,v});if(r.me){S={...S,me:r.me};renderPlayer();}
   });
+  root.querySelectorAll('[data-give]').forEach(b=>b.onclick=async()=>{b.disabled=true;const r=await api('give',{pid,what:b.dataset.give});if(r.me)S={...S,me:r.me};renderPlayer();});
+  const pd=$('#pdone');if(pd)pd.onclick=async()=>{pd.disabled=true;const r=await api('done',{pid});if(r.me)S={...S,me:r.me};renderPlayer();};
   const rb=$('#prollbtn');
   if(rb)rb.onclick=async()=>{
     if(rolling)return;rolling=true;rb.classList.add('rolling');
@@ -135,11 +142,20 @@ function playerBody(me,my){
          <div class="muted">${esc(t('waitReveal'))}</div></div>`;
       }
       return `<div class="card">${head}<div><span class="muted">${esc(t('chosen'))}:</span> <b>${esc(L(o).t)}</b> <span class="pill ${modCls(modOf(me.c,o.tag))}">${esc(tagLabel(o.tag))} ${sgn(modOf(me.c,o.tag))}</span></div>${inner}</div>`;}
+    case 'rescue':{
+      const R=S.rescue||{need:0,target:'partial'},o=sc.o[S.winner];const ok=R.need===0;
+      return `<div class="card rcard">${head}${lootHtml(me)}<div class="rbig">${esc(t('rescueTitle'))}</div>
+        <div>${esc(t('rescueTo'))}: <b class="t-${R.target}">${esc(t('tl_'+R.target))}</b> <span class="timer num js-timer"></span></div>
+        <div class="rneedp" id="prNeed"></div><div class="muted">${esc(t('rescueHelp'))}</div>
+        <div class="givebtns"><button type="button" class="btn" data-give="coins"${ok||me.coins<15||me.done?' disabled':''}>🪙 ${esc(t('giveCoins'))}</button><button type="button" class="btn insp" data-give="insp"${ok||me.insp<5||me.done?' disabled':''}>✨ ${esc(t('giveInsp'))}</button></div>
+        ${me.given?`<div class="muted num">${esc(t('gaveTotal'))}: ${me.given} ${esc(t('rescuePts'))}</div>`:''}
+        ${me.done?`<div class="muted center">${esc(t('rescueDoneMsg'))}</div>`:`<button type="button" class="btn ghost" id="pdone">${esc(t('rescueDone'))}</button>`}</div>`;}
     case 'result':{
       const o=sc.o[S.winner],oc=S.outcome||{};
       if(Date.now()<pDrumUntil)return `<div class="card">${head}<div class="rollbig"><div class="die rolling" aria-hidden="true">?</div><b>${esc(t('fateRolling'))}</b></div></div>`;
       return `<div class="card">${head}<div class="tier t-${oc.tier}">${esc(t('tier_'+oc.tier))}</div>${oc.tier==='partial'?`<div class="muted" style="font-weight:700">${esc(t('partialNote'))}</div>`:''}
-       <div class="narr">${esc(oc.tier==='fail'?L(o).l:L(o).w)}</div>${deltaHtml(oc.delta)}
+       ${oc.rescued?`<div class="rescuedbadge">🛟 ${esc(t('rescuedNote'))} +${oc.pts}</div>`:''}${oc.tier==='severe'?`<div class="muted" style="font-weight:700">${esc(t('severeNote'))}</div>`:''}
+       <div class="narr">${esc(oc.tier==='fail'||oc.tier==='severe'?L(o).l:L(o).w)}</div>${deltaHtml(oc.delta,oc.share)}${lootHtml(me)}
        <div class="muted num">${esc(t('groupAvg'))}: ${oc.avg} · ${esc(t('dc'))} ${oc.dc}</div></div>`;}
     case 'ending':case 'awards':{
       const e=S.ending?ENDINGS[S.ending.id]:null;let a='';
@@ -178,19 +194,19 @@ const moodKey=m=>'mood'+Math.min(4,Math.floor(m/20.001));
 const fmtFi=n=>Math.round(n).toLocaleString('fi-FI');
 const tagBi=tag=>BI(TAGS[tag].fi,TAGS[tag].en);
 const twoCol=(fi,en,cls)=>`<div class="bicols ${cls||''}"><div class="bcol"><span class="lt">FI</span><p class="narr">${esc(fi)}</p></div><div class="bcol"><span class="lt">EN</span><p class="narr be-n">${esc(en)}</p></div></div>`;
-function deltaBi(d){
+function deltaBi(d,share){
   if(!d)return'';const o=[];
-  if(d.g)o.push(`<span class="delta ${d.g>0?'up':'down'}">${d.g>0?'+':''}${fmtFi(d.g)} ${BI('kultaa','gold')}</span>`);
+  if(share)o.push(`<span class="delta ${share>0?'up':'down'}">${share>0?'+':''}${share} 🪙 ${BI('kaikille','each')}</span>`);
   if(d.v)o.push(`<span class="delta ${d.v>0?'up':'down'}">${d.v>0?'+':''}${fmtFi(d.v)} ${BI('tuuletinta','vents')}</span>`);
   if(d.m)o.push(`<span class="delta ${d.m>0?'up':'down'}">${d.m>0?'+':''}${d.m} ${BI('mieliala','mood')}</span>`);
   return o.length?`<div class="deltas">${o.join('')}</div>`:'';
 }
 const art=(name,cls)=>`<figure class="art ${cls||''}"><img src="/img/${name}.jpg" alt="" onerror="this.closest('figure').hidden=true"></figure>`;
 function duelHtml(dc,avg,tier){
-  const max=Math.max(25,dc+9),pct=v=>clamp(v/max*100,0,100);
-  const zones=[['fail',0,dc-3],['partial',dc-3,dc],['success',dc,dc+5],['legendary',dc+5,max]];
+  const lo=Math.max(0,dc-11),max=dc+9,pct=v=>clamp((v-lo)/(max-lo)*100,0,100);
+  const zones=[['severe',lo,dc-6],['fail',dc-6,dc-3],['partial',dc-3,dc],['success',dc,dc+5],['legendary',dc+5,max]];
   const has=avg!=null;
-  return `<div class="duel" data-max="${max}"><div class="duel-row">
+  return `<div class="duel" data-max="${max}" data-lo="${lo}"><div class="duel-row">
     <div class="dn"><div class="eyebrow">${bki('groupAvg')}</div><div class="n num ${has?'t-'+tier:''}" id="dAvg">${has?avg:'–'}</div></div>
     <div class="vsx">vs</div>
     <div class="dn"><div class="eyebrow">${bki('dc')}</div><div class="n num">${dc}</div></div></div>
@@ -203,15 +219,15 @@ function duelHtml(dc,avg,tier){
 const duel=oc=>duelHtml(oc.dc,oc.avg,oc.tier);
 function setDuel(avg,dc){
   const n=$('#dAvg'),m=$('#dMarker'),d=document.querySelector('.duel');if(!n||!m||!d)return;
-  const max=+d.dataset.max;
+  const max=+d.dataset.max,lo=+(d.dataset.lo||0);
   if(avg==null){n.textContent='–';n.className='n num';m.style.opacity=0;document.querySelectorAll('.track .zone').forEach(z=>z.classList.remove('on'));return;}
   const tier=tierOf(avg,dc);
-  n.textContent=avg;n.className='n num t-'+tier;m.style.opacity=1;m.style.left=clamp(avg/max*100,0,100)+'%';m.querySelector('b').textContent=avg;
+  n.textContent=avg;n.className='n num t-'+tier;m.style.opacity=1;m.style.left=clamp((avg-lo)/(max-lo)*100,0,100)+'%';m.querySelector('b').textContent=avg;
   document.querySelectorAll('.track .zone').forEach(z=>z.classList.toggle('on',z.dataset.k===tier));
 }
 function liveRolls(){
   const sc=SCENES[S.scene],o=sc.o[S.winner],rs=[];
-  (S.players||[]).forEach(p=>{if(p.r!=null)rs.push({k:'p:'+(p.id||p.n+'|'+p.c),n:p.n,c:p.c,r:p.r});});
+  (S.players||[]).forEach(p=>{if(p.r!=null)rs.push({k:'p:'+(p.id||p.n+'|'+p.c),n:p.n,c:p.c,r:p.r,st:p.st,cd:p.cd});});
   (S.guild||[]).forEach((g,i)=>rs.push({k:'g:'+i,n:tf('guild'),c:null,r:g}));
   rs.forEach(x=>x.tot=rollTotal(x.r,x.c,o.tag));
   const avg=rs.length?Math.round(rs.reduce((a,x)=>a+x.tot,0)/rs.length*10)/10:null;
@@ -220,7 +236,7 @@ function liveRolls(){
 function dieHtml(x,tag,drop){
   const md=x.c&&x.r!==1?modOf(x.c,tag):0;
   return `<div class="die3${drop?' drop':''}${x.r===20?' crit':x.r===1?' fum':''}" data-k="${esc(x.k||'')}" style="--rot:${(Math.random()*36-18).toFixed(1)}deg">
-    <div class="dface"><span class="num">${x.r}</span>${md?`<em>${sgn(md)}</em>`:''}</div><div class="dname">${x.c?cls(x.c).ic+' ':'🎲 '}${esc(x.n)}</div></div>`;
+    <div class="dface"><span class="num">${x.r}</span>${md?`<em>${sgn(md)}</em>`:''}</div><div class="dname">${x.c?cls(x.c).ic+' ':'🎲 '}${esc(x.n)}${x.st>=2?' 🔥':x.cd>=2?' 🧊':''}</div></div>`;
 }
 function updateVote(){
   const tl=S.tally||[0,0,0],tot=tl.reduce((a,b)=>a+b,0),max=Math.max(...tl);
@@ -238,6 +254,16 @@ function updateRoll(){
     rs.forEach(x=>{if(have.has(x.k))return;f.insertAdjacentHTML('beforeend',dieHtml(x,tag,true));});}
   const ps=S.players||[],el=$('#rCount');if(el)el.textContent=ps.filter(p=>p.r!=null).length+' / '+ps.length;
   const ad=$('#allDone');if(ad)ad.hidden=!(ps.length&&ps.every(p=>p.r!=null));
+}
+function updateRescue(){
+  const R=S.rescue,RL=S.roll;if(!R||!RL)return;
+  const avg=Math.round((RL.sum+R.pts)/RL.n*100)/100;
+  setDuel(avg,RL.dc);
+  const m=$('#dMarker');if(m){m.classList.remove('jit');void m.offsetWidth;m.classList.add('jit');}
+  const need=$('#rNeed');if(need){need.innerHTML=R.need>0?`${bki('rescueNeed')}: <b class="num">${R.need}</b> ${bki('rescuePts')}`:`<span class="t-success">${bki('rescued')}</span>`;}
+  const pts=$('#rPts');if(pts)pts.textContent='+'+R.pts;
+  const gv=$('#rGivers');if(gv)gv.innerHTML=(R.givers||[]).map(g=>`<span class="chip"><span>${cls(g.c)?cls(g.c).ic:''}</span><span class="nm">${esc(g.n)}</span><span class="r num">+${g.pts}</span></span>`).join('');
+  const ps=S.players||[],ad=$('#allDone');if(ad)ad.hidden=!(ps.length&&ps.every(p=>p.done))||R.need===0;
 }
 /* drumroll between rolling and the result */
 let lastPhaseKey='',drumKey='',drumUntil=0,drumTimer=null;
@@ -261,7 +287,8 @@ function renderHost(){
   const r=S.res;
   $('#hostBand').innerHTML=`<div class="brand"><h1>${esc(tf('title'))}</h1><div class="sub">${esc(te('title'))} · VILPE</div></div>
    <div class="score">
-    <div class="meter"><span class="lbl">${bki('gold')}</span><span class="val num" style="color:var(--gold)">${fmtFi(r.g)}</span></div>
+    <div class="meter"><span class="lbl">🪙 ${bki('coins')}</span><span class="val num" style="color:var(--gold)">${fmtFi(r.g)}</span></div>
+    <div class="meter"><span class="lbl">✨ ${bki('insp')}</span><span class="val num" style="color:#b9a4ff">${fmtFi(r.i||0)}</span></div>
     <div class="meter"><span class="lbl">${bki('vents')}</span><span class="val num">${fmtFi(r.v)} <small class="muted" style="font-size:1rem">/ 10 000</small></span><div class="bar"><i style="width:${clamp(r.v/100,0,100)}%"></i></div></div>
     <div class="meter"><span class="lbl">${bki('mood')}</span><span class="val mval">${BI(tf(moodKey(r.m)),te(moodKey(r.m)))}</span><div class="bar mood"><i style="width:${r.m}%"></i></div></div>
    </div>`;
@@ -271,7 +298,7 @@ function renderHost(){
         <div class="chips"><span class="pill">${tagBi(o.tag)}</span>${modChips(o.tag)}</div></div>`;};
   const stage=$('#hostStage');
   const sig=[S.runId,S.phase,S.scene,S.winner,drum?'drum':''].join('|');
-  const live={vote:updateVote,roll:updateRoll}[S.phase];
+  const live={vote:updateVote,roll:updateRoll,rescue:updateRescue}[S.phase];
   if((live||drum)&&stage.dataset.sig===sig){if(live)live();renderDm();return;}
   let h='';
   switch(S.phase){
@@ -298,15 +325,26 @@ function renderHost(){
         <div class="callout">${bks('rollOnPhones')}</div>
         <div class="bigcount"><span class="num" id="rCount"></span> <span>${bki('rolledN')}</span> <span class="timer js-timer"></span></div><div class="alldone" id="allDone" hidden>${bks('allRolled')}</div></div>
         <div class="right">${duelHtml(sc.dc,null,null)}<div class="dicefield" id="diceField"></div></div></div>`;break;
+    case 'rescue':{
+      const RL=S.roll,R=S.rescue;
+      h=`<div class="stage rescue"><div class="left">${head}
+        <div class="callout rtitle">${bks('rescueTitle')}</div>
+        <div class="rsub">${bks('rescueSub')}</div>
+        <div class="rtarget">${bki('rescueTo')}: <b class="t-${R.target}">${BI(tf('tl_'+R.target),te('tl_'+R.target))}</b></div>
+        <div class="rneed" id="rNeed"></div>
+        <div class="bigcount"><span class="num rpts" id="rPts">+0</span> <span>${bki('rescuePts')}</span> <span class="timer js-timer"></span></div>
+        <div class="rhelp">${bki('rescueHelp')}</div>
+        <div class="alldone" id="allDone" hidden>${bks('allGave')}</div></div>
+        <div class="right"><div class="zoomwrap">${duelHtml(RL.dc,RL.avg,RL.tier0)}</div><div class="chips" id="rGivers"></div></div></div>`;break;}
     case 'result':{
       const o=sc.o[S.winner],oc=S.outcome,tag=o.tag;
       if(drum){
         h=`<div class="stage"><div class="left">${head}${chosen()}</div><div class="right">${duelHtml(oc.dc,null,null)}</div></div>`;break;
       }
-      const fail=oc.tier==='fail';
+      const fail=oc.tier==='fail'||oc.tier==='severe';
       const chips=(S.lastRolls||[]).map(x=>`<span class="chip ${x.r===20?'c20':x.r===1?'c1':''}"><span>${x.c?cls(x.c).ic:'🎲'}</span><span class="nm">${esc(x.n||tf('guild'))}</span><span class="r num">${x.tot}</span></span>`).join('');
-      h=`<div class="stage"><div class="left">${head}<div class="tier pop t-${oc.tier}">${BS(tf('tier_'+oc.tier),te('tier_'+oc.tier))}</div>${oc.tier==='partial'?`<div class="pnote">${bks('partialNote')}</div>`:''}
-        ${twoCol(fail?o.fi.l:o.fi.w,fail?o.en.l:o.en.w,'res')}<div class="bigdeltas">${deltaBi(oc.delta)}</div></div>
+      h=`<div class="stage"><div class="left">${head}<div class="tier pop t-${oc.tier}">${BS(tf('tier_'+oc.tier),te('tier_'+oc.tier))}</div>${oc.rescued?`<div class="rescuedbadge">🛟 ${bki('rescuedNote')} +${oc.pts} · ${esc(String(oc.avg0))} → ${esc(String(oc.avg))}</div>`:''}${oc.tier==='severe'?`<div class="pnote">${bks('severeNote')}</div>`:oc.tier==='partial'?`<div class="pnote">${bks('partialNote')}</div>`:''}
+        ${twoCol(fail?o.fi.l:o.fi.w,fail?o.en.l:o.en.w,'res')}<div class="bigdeltas">${deltaBi(oc.delta,oc.share)}</div></div>
         <div class="right">${duel(oc)}
         <div class="feats">${oc.best?`<div class="feat hero-feat"><span class="eyebrow">${bki('sceneHero')}</span><span class="fw">${esc(oc.best.n)}</span><span class="fs num">${oc.best.t}</span></div>`:''}
         ${oc.crit.length?`<div class="feat"><span class="eyebrow">${bki('crits')}</span><div class="chips">${oc.crit.map(n=>`<span class="chip c20">${esc(n)}</span>`).join('')}</div></div>`:''}
@@ -320,8 +358,8 @@ function renderHost(){
         ${twoCol(e.fi.n,e.en.n,'end')}${art('ending-'+S.ending.id,'sq3')}</div>`;break;}
     case 'awards':{
       const e=ENDINGS[S.ending.id];
-      h=`<div style="display:grid;gap:22px"><div><div class="eyebrow">${BI(e.fi.t,e.en.t)}</div><h2 class="stitle">${bks('awards')}</h2></div>
-        <div class="awards">${(S.awards||[]).map(a=>`<div class="award"><span class="t">${bki('aw_'+a.k)}</span><span class="w">${esc(a.n)}</span></div>`).join('')||`<span class="muted">—</span>`}</div></div>`;break;}
+      h=`<div style="display:grid;gap:22px"><div><div class="eyebrow">${BI(e.fi.t,e.en.t)}</div><h2 class="stitle awtitle">${bks('awards')}</h2></div>
+        <div class="awards">${(S.awards||[]).map(a=>`<div class="award"><span class="t">${bki('aw_'+a.k)}</span><span class="w">${esc(a.n)}</span>${a.x?`<span class="ax num">${a.k==='rich'?'🪙 '+a.x:a.k==='insp'?'✨ '+a.x:'🛟 '+a.x+' '+esc(tf('rescuePts'))}</span>`:''}</div>`).join('')||`<span class="muted">—</span>`}</div></div>`;break;}
   }
   const fadeSig=S.phase+S.scene+(drum?'d':'');
   if(stage.dataset.fade!==fadeSig){stage.classList.remove('fade-in');void stage.offsetWidth;stage.classList.add('fade-in');}
@@ -337,7 +375,7 @@ function renderDm(){
   const sig=[S.runId,S.phase,S.scene,armReset?1:0,drumming()?1:0].join('|');
   if(sig===dmSig){const c=$('#dmConn');if(c){c.className='conn '+(connected?'on':'off');c.textContent=connTxt;}return;}
   dmSig=sig;
-  const labels={lobby:'begin',intro:'openVote',vote:'closeVote',roll:'reveal',result:S.scene<SCENES.length-1?'next':'finale',ending:'showAwards',awards:'newGame'};
+  const labels={lobby:'begin',intro:'openVote',vote:'closeVote',roll:'reveal',rescue:'endRescue',result:S.scene<SCENES.length-1?'next':'finale',ending:'showAwards',awards:'newGame'};
   let mid='';
   if(false){}
   else if(S.phase==='roll')mid=`<button class="btn ghost small" id="dmGuild" type="button">🎲 ${esc(tf('guildDie'))}</button>`;

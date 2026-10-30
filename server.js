@@ -55,6 +55,7 @@ function allDone() {
   const ps = online(); if (!ps.length) return false; const k = key();
   if (H.phase === 'vote') return ps.every(p => p.vote && p.vote.k === k);
   if (H.phase === 'roll') return ps.every(p => p.roll && p.roll.k === k);
+  if (H.phase === 'rescue') return ps.every(p => p.done === k) || rescueNeed() === 0;
   return false;
 }
 function checkAuto() {
@@ -65,7 +66,7 @@ function checkAuto() {
   autoTimer = setTimeout(() => {
     autoTimer = null; autoKey = '';
     if (H.runId + '|' + H.scene + '|' + H.phase === tag && allDone()) { advance(); broadcast(); }
-  }, H.phase === 'roll' ? 4100 : 3500);
+  }, H.phase === 'roll' ? 4100 : H.phase === 'rescue' ? 2500 : 3500);
 }
 function advance() {
   switch (H.phase) {
@@ -77,28 +78,67 @@ function advance() {
       H.tie = max > 0 && tops.length > 1; H.winner = tops[Math.floor(Math.random() * tops.length)];
       H.phase = 'roll'; H.guild = []; H.deadline = Date.now() + 30000; break;
     }
-    case 'roll': resolveRoll(); H.phase = 'result'; H.deadline = 0; break;
+    case 'roll': computeRoll(); break;
+    case 'rescue': finalizeRoll(); break;
     case 'result':
-      if (H.scene < G.SCENES.length - 1) { H.scene++; H.phase = 'intro'; H.outcome = null; H.winner = -1; H.lastRolls = []; }
+      if (H.scene < G.SCENES.length - 1) { H.scene++; H.phase = 'intro'; H.outcome = null; H.winner = -1; H.lastRolls = []; H.rescue = null; H.roll = null; }
       else { finishGame(); H.phase = 'ending'; }
       break;
     case 'ending': H.phase = 'awards'; break;
-    case 'awards': H = fresh(); for (const p of players.values()) { p.vote = null; p.roll = null; } break;
+    case 'awards': H = fresh(); for (const p of players.values()) resetStash(p); break;
   }
 }
-function resolveRoll() {
+const RESCUE_MS = 20000;
+let rescueTimer = null;
+function resetStash(p) { p.coins = 0; p.insp = 0; p.streak = 0; p.cold = 0; p.given = 0; p.loot = null; p.vote = null; p.roll = null; p.done = null; }
+// Step 1 (end of rolling): guild average, personal streaks and loot. May open a rescue window.
+function computeRoll() {
   let rolls = liveRolls();
   if (!rolls.length) { for (let i = 0; i < 5; i++) H.guild.push(G.d20()); rolls = liveRolls(); }
-  const sc = G.SCENES[H.scene], o = sc.o[H.winner];
+  const sc = G.SCENES[H.scene], o = sc.o[H.winner], k = key();
   const totals = rolls.map(x => ({ ...x, tot: G.rollTotal(x.r, x.c, o.tag) }));
-  const avg = totals.reduce((s, x) => s + x.tot, 0) / totals.length;
-  const tier = G.tierOf(avg, sc.dc);
-  const mult = { legendary: 1.5, success: 1, partial: 0.75 }[tier] || 1;
-  const base = tier === 'fail' ? o.lose : o.win;
+  const sum = totals.reduce((s, x) => s + x.tot, 0), n = totals.length, avg = sum / n;
+  const tier0 = G.tierOf(avg, sc.dc);
+  for (const x of totals) {
+    if (!x.phone) continue;
+    const p = players.get(x.pid); if (!p) continue;
+    if (x.tot >= sc.dc) { p.streak++; p.cold = 0; } else { p.cold++; p.streak = 0; }
+    const base = tier0 === 'severe' ? { c: 0, i: 0 } : G.lootOf(x.r, x.c);
+    const mult = G.streakMult(p.streak);
+    const c = Math.round(base.c * mult), i = Math.round(base.i * mult);
+    p.coins += c; p.insp += i; p.loot = { k, c, i, mult, streak: p.streak, cold: p.cold };
+  }
+  H.roll = { sum, n, avg, tier0, dc: sc.dc, totals };
+  if (tier0 === 'fail' || tier0 === 'partial') {
+    const target = tier0 === 'fail' ? 'partial' : 'success';
+    H.rescue = { pts: 0, target, thr: target === 'partial' ? sc.dc - 3 : sc.dc, givers: {}, until: Date.now() + RESCUE_MS };
+    for (const p of players.values()) p.done = null;
+    H.phase = 'rescue'; H.deadline = H.rescue.until;
+    const tag = H.runId + '|' + H.scene;
+    clearTimeout(rescueTimer);
+    rescueTimer = setTimeout(() => { if (H.phase === 'rescue' && H.runId + '|' + H.scene === tag) { finalizeRoll(); broadcast(); } }, RESCUE_MS + 300);
+  } else { H.rescue = null; finalizeRoll(); }
+}
+const rescueNeed = () => H.rescue ? Math.max(0, Math.ceil(H.rescue.thr * H.roll.n - H.roll.sum - H.rescue.pts - 1e-9)) : 0;
+// Step 2: apply the (possibly rescued) result
+function finalizeRoll() {
+  clearTimeout(rescueTimer);
+  const R = H.roll, sc = G.SCENES[H.scene], o = sc.o[H.winner];
+  const pts = H.rescue ? H.rescue.pts : 0;
+  const avg = (R.sum + pts) / R.n;
+  let tier = G.tierOf(avg, sc.dc);
+  const maxIdx = G.TIERS.indexOf(R.tier0) + (H.rescue ? 1 : 0);
+  if (G.TIERS.indexOf(tier) > maxIdx) tier = G.TIERS[maxIdx];
+  const mult = { legendary: 1.5, success: 1, partial: 0.75, fail: 1, severe: 1.5 }[tier];
+  const base = (tier === 'fail' || tier === 'severe') ? o.lose : o.win;
   const d = { g: Math.round(base.g * mult / 10) * 10, v: Math.round(base.v * mult / 50) * 50, m: Math.round(base.m * mult) };
-  H.res.g = Math.max(0, H.res.g + d.g); H.res.v = Math.max(0, H.res.v + d.v); H.res.m = clamp(H.res.m + d.m, 0, 100);
+  H.res.v = Math.max(0, H.res.v + d.v); H.res.m = clamp(H.res.m + d.m, 0, 100);
+  // story gold is shared out as coins to every player in the game
+  const share = Math.round(d.g / 10);
+  if (share) for (const p of listed()) p.coins = Math.max(0, p.coins + share);
+  const totals = R.totals;
   const best = totals.filter(x => x.phone).sort((a, b) => b.tot - a.tot)[0];
-  H.outcome = { avg: Math.round(avg * 10) / 10, dc: sc.dc, tier, n: totals.length, delta: d,
+  H.outcome = { avg: Math.round(avg * 10) / 10, avg0: Math.round(R.avg * 10) / 10, dc: sc.dc, tier, tier0: R.tier0, rescued: G.TIERS.indexOf(tier) > G.TIERS.indexOf(R.tier0), pts, n: totals.length, delta: d, share,
     crit: totals.filter(x => x.r === 20 && x.phone).map(x => x.n).slice(0, 8),
     fum: totals.filter(x => x.r === 1 && x.phone).map(x => x.n).slice(0, 8),
     best: best ? { n: best.n, t: best.tot } : null };
@@ -109,6 +149,7 @@ function resolveRoll() {
     const g = H.glory[x.pid] || (H.glory[x.pid] = { n: x.n, sum: 0, n20: 0, n1: 0, hi: 0, cnt: 0 });
     g.n = x.n; g.sum += x.tot + (x.r === 20 ? 10 : 0); g.cnt++; if (x.r === 20) g.n20++; if (x.r === 1) g.n1++; g.hi = Math.max(g.hi, x.r);
   }
+  H.phase = 'result'; H.deadline = 0;
 }
 function finishGame() {
   const r = H.res;
@@ -129,6 +170,13 @@ function finishGame() {
     aw.push({ k: 'fumble', n: by((a, b) => (b.n1 - a.n1) || (a.sum / a.cnt - b.sum / b.cnt)).n });
     if (gl.length > 2) aw.push({ k: 'snack', n: by((a, b) => a.sum - b.sum).n });
   }
+  const ps = [...players.values()].filter(p => p.n);
+  const top = f => ps.slice().sort(f)[0];
+  if (ps.length) {
+    const r = top((a, b) => b.coins - a.coins); if (r.coins > 0) aw.push({ k: 'rich', n: r.n, x: r.coins });
+    const i = top((a, b) => b.insp - a.insp); if (i.insp > 0) aw.push({ k: 'insp', n: i.n, x: i.insp });
+    const g = top((a, b) => b.given - a.given); if (g.given > 0) aw.push({ k: 'gen', n: g.n, x: g.given });
+  }
   H.awards = aw;
 }
 
@@ -137,14 +185,19 @@ function publicState() {
   const k = key();
   return {
     runId: H.runId, phase: H.phase, scene: H.scene, winner: H.winner, tie: H.tie,
-    tally: H.phase === 'vote' ? liveTally() : H.tally, hand: H.hand, outcome: H.outcome, res: H.res,
+    tally: H.phase === 'vote' ? liveTally() : H.tally, hand: H.hand, outcome: H.outcome,
+    res: { ...H.res, g: [...players.values()].filter(p => p.n).reduce((s, p) => s + p.coins, 0), i: [...players.values()].filter(p => p.n).reduce((s, p) => s + p.insp, 0) },
+    roll: H.phase === 'rescue' && H.roll ? { sum: H.roll.sum, n: H.roll.n, avg: Math.round(H.roll.avg * 10) / 10, tier0: H.roll.tier0, dc: H.roll.dc } : null,
+    rescue: H.phase === 'rescue' && H.rescue ? { pts: H.rescue.pts, target: H.rescue.target, thr: H.rescue.thr, need: rescueNeed(),
+      givers: Object.values(H.rescue.givers).sort((a, b) => b.pts - a.pts).slice(0, 12) } : null,
     left: Math.max(0, H.deadline - Date.now()), ending: H.ending, awards: H.awards, guild: H.guild, lastRolls: H.lastRolls, log: H.log,
-    players: listed().map(p => ({ id: p.pub, n: p.n, c: p.c, voted: !!(p.vote && p.vote.k === k), r: p.roll && p.roll.k === k ? p.roll.r : null })),
+    players: listed().map(p => ({ id: p.pub, n: p.n, c: p.c, voted: !!(p.vote && p.vote.k === k), r: p.roll && p.roll.k === k ? p.roll.r : null, st: p.streak, cd: p.cold, done: p.done === k })),
   };
 }
 function meOf(pid) {
   const p = players.get(pid); if (!p || !p.n) return null; const k = key();
-  return { n: p.n, c: p.c, v: p.vote && p.vote.k === k ? p.vote.v : -1, r: p.roll && p.roll.k === k ? p.roll.r : null };
+  return { n: p.n, c: p.c, v: p.vote && p.vote.k === k ? p.vote.v : -1, r: p.roll && p.roll.k === k ? p.roll.r : null,
+    coins: p.coins, insp: p.insp, st: p.streak, cd: p.cold, given: p.given, loot: p.loot && p.loot.k === k ? p.loot : null, done: p.done === k };
 }
 function send(cl, st) {
   const payload = cl.host ? st : { ...st, players: undefined, me: meOf(cl.pid), count: st.players.length };
@@ -169,7 +222,7 @@ function body(req) {
 const okPid = p => typeof p === 'string' && /^[a-z0-9]{8,32}$/.test(p);
 function getP(pid) {
   let p = players.get(pid);
-  if (!p) { if (players.size > 300) return null; p = { pid, pub: Math.random().toString(36).slice(2, 10), n: '', c: '', vote: null, roll: null, conns: 0, seen: Date.now() }; players.set(pid, p); }
+  if (!p) { if (players.size > 300) return null; p = { pid, pub: Math.random().toString(36).slice(2, 10), n: '', c: '', conns: 0, seen: Date.now() }; resetStash(p); players.set(pid, p); }
   p.seen = Date.now(); return p;
 }
 
@@ -211,7 +264,7 @@ const server = http.createServer(async (req, res) => {
     if (route === '/api/host') {
       if (b.key !== HOST_KEY) return json(res, 403, { error: 'bad_key' });
       if (b.action === 'next') { if (!b.from || b.from === H.runId + '|' + H.scene + '|' + H.phase) advance(); }
-      else if (b.action === 'reset') { H = fresh(); for (const p of players.values()) { p.vote = null; p.roll = null; } }
+      else if (b.action === 'reset') { clearTimeout(rescueTimer); H = fresh(); for (const p of players.values()) resetStash(p); }
       else if (b.action === 'guild' && H.phase === 'roll' && H.guild.length < 40) H.guild.push(G.d20());
       else if (b.action === 'kick' && typeof b.n === 'string') { for (const p of players.values()) if (p.n === b.n) { p.n = ''; p.c = ''; }  checkAuto(); }
       broadcast(); return json(res, 200, { ok: true });
@@ -233,6 +286,21 @@ const server = http.createServer(async (req, res) => {
       if (H.phase !== 'roll') return json(res, 409, { error: 'not_rolling' });
       if (!(p.roll && p.roll.k === key())) p.roll = { k: key(), r: G.d20() };
       broadcast(); checkAuto(); return json(res, 200, { ok: true, me: meOf(p.pid) });
+    }
+    if (route === '/api/give') {
+      if (H.phase !== 'rescue' || !H.rescue) return json(res, 409, { error: 'not_rescue' });
+      if (rescueNeed() === 0) return json(res, 409, { error: 'rescued', me: meOf(p.pid) });
+      let pts = 0;
+      if (b.what === 'coins' && p.coins >= 15) { p.coins -= 15; pts = 1; }
+      else if (b.what === 'insp' && p.insp >= 5) { p.insp -= 5; pts = 1; }
+      if (!pts) return json(res, 409, { error: 'broke', me: meOf(p.pid) });
+      H.rescue.pts += pts; p.given += pts;
+      const gv = H.rescue.givers[p.pub] || (H.rescue.givers[p.pub] = { id: p.pub, n: p.n, c: p.c, pts: 0 }); gv.pts += pts;
+      broadcast(); checkAuto(); return json(res, 200, { ok: true, me: meOf(p.pid) });
+    }
+    if (route === '/api/done') {
+      if (H.phase !== 'rescue') return json(res, 409, { error: 'not_rescue' });
+      p.done = key(); broadcast(); checkAuto(); return json(res, 200, { ok: true, me: meOf(p.pid) });
     }
     return json(res, 404, { error: 'not_found' });
   }

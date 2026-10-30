@@ -308,3 +308,60 @@ html:not(.tvfit) .bicols.res{grid-template-columns:1fr}}
 .intro3.ending .narr{font-size:clamp(1.05rem,calc(1.36*var(--vw)),1.6rem);line-height:1.45}
 .bicols.res .narr{font-size:clamp(1.05rem,calc(1.34*var(--vw)),1.55rem);line-height:1.42}
 .tier.pop{transform-origin:left center}
+
+/* ---- loot, streaks, rescue ---- */
+.z-severe{background:#7a1f2b;border-radius:10px 0 0 10px}
+.z-fail{border-radius:0}
+.t-severe{color:#ff5a6e}
+.stash{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;margin-top:6px;font-size:1rem}
+.stash b{font-size:1.15rem}
+.stash .sc b{color:var(--gold)}.stash .si b{color:#b9a4ff}
+.streak{font-weight:800;font-size:.85rem;border-radius:99px;padding:.15em .6em}
+.streak.hot{color:#ffb35c;background:rgba(240,136,58,.16);border:1px solid rgba(240,136,58,.5)}
+.streak.cold{color:#9fd8ff;background:rgba(120,190,255,.12);border:1px solid rgba(120,190,255,.45)}
+.lootcls{color:var(--muted);font-weight:700}
+.loot{font-size:1.05rem}
+.loot b{margin-right:4px}
+body.onfire::after,body.oniced::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:60}
+body.onfire::after{box-shadow:inset 0 0 0 3px rgba(255,140,50,.9),inset 0 0 38px 10px rgba(255,90,20,.55);animation:flick 1.1s ease-in-out infinite alternate}
+body.oniced::after{box-shadow:inset 0 0 0 3px rgba(150,210,255,.85),inset 0 0 34px 8px rgba(110,180,255,.4)}
+@keyframes flick{0%{opacity:.75}50%{opacity:1}100%{opacity:.85}}
+.rcard{border-color:var(--ember)}
+.rbig{font-family:var(--f-display);font-size:2.2rem;color:var(--ember);line-height:1}
+.rneedp{font-size:1.15rem;font-weight:700}
+.givebtns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.givebtns .btn{font-size:1.05rem;padding:.9em .5em}
+.btn.insp{background:#b9a4ff}
+.rescuedbadge{display:inline-block;font-weight:800;color:var(--good);background:rgba(140,196,126,.12);border:1px solid rgba(140,196,126,.45);border-radius:10px;padding:.3em .7em;font-size:clamp(1rem,calc(1.2*var(--vw)),1.3rem)}
+/* TV rescue */
+.rescue .rtitle{font-size:clamp(2.6rem,calc(4.4*var(--vw)),4.4rem);color:var(--ember)}
+.rescue .rsub{font-size:clamp(1.15rem,calc(1.5*var(--vw)),1.6rem);font-weight:700}
+.rescue .rtarget{font-size:clamp(1.15rem,calc(1.5*var(--vw)),1.6rem)}
+.rescue .rneed{font-size:clamp(1.4rem,calc(2*var(--vw)),2.1rem);font-weight:800}
+.rescue .rneed b{font-family:var(--f-display);font-size:1.5em;color:var(--gold)}
+.rescue .rpts{color:#b9a4ff}
+.rescue .rhelp{color:var(--muted);font-size:clamp(1rem,calc(1.2*var(--vw)),1.3rem)}
+.zoomwrap .duel{padding:26px 28px 34px}
+.zoomwrap .duel .n{font-size:clamp(4.4rem,calc(8.5*var(--vw)),8.4rem)}
+.zoomwrap .track{height:96px;margin-top:44px}
+.zoomwrap .zone span{font-size:.9rem}
+.zoomwrap .marker{top:-40px}
+.zoomwrap .marker::after{height:118px;width:24px;left:-12px;border-width:4px}
+.zoomwrap .marker b{bottom:118px;font-size:1.8rem}
+.zoomwrap .dcline{width:5px;margin-left:-2.5px;top:-12px;bottom:-12px}
+.marker.jit::after{animation:jit .5s ease-out}
+.zoomwrap .marker::after{animation:jitter 0.35s steps(2) infinite}
+@keyframes jitter{0%{transform:translateX(-1.5px)}100%{transform:translateX(1.5px)}}
+@keyframes jit{0%{transform:translateX(-7px)}25%{transform:translateX(6px)}50%{transform:translateX(-4px)}75%{transform:translateX(2px)}100%{transform:translateX(0)}}
+.zoomwrap .marker{transition:left .45s cubic-bezier(.3,1.5,.5,1)}
+.award .ax{font-weight:800;color:var(--muted);font-size:1.05rem}
+@media (prefers-reduced-motion:reduce){.zoomwrap .marker::after,.marker.jit::after,body.onfire::after{animation:none}}
+.zoomwrap .marker.jit::after{animation:jit .5s ease-out,jitter .35s steps(2) .5s infinite}
+.zoomwrap .zone span{font-size:.8rem}
+.zone span{overflow-wrap:normal;white-space:nowrap}
+.awtitle{font-size:4.2rem}
+html.tvfit .awards{grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
+html.tvfit .award{padding:20px 22px;gap:8px}
+html.tvfit .award .w{font-size:2.6rem}
+html.tvfit .award .t{font-size:.9rem}
+html.tvfit .award .ax{font-size:1.3rem}

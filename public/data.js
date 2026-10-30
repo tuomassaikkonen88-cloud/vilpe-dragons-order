@@ -1,16 +1,16 @@
 (function(root){
 // Skill modifiers per class (D&D archetypes): one each of +3, +2, +1, 0, -1, -2
 const CLASSES=[
- {id:'paladin',tag:'might', ic:'🛡️',en:'Vent Paladin',fi:'Tuuletinpaladiini',sk:{might:3,charm:2,craft:1,scout:0,arcane:-1,cunning:-2}},
- {id:'ranger', tag:'scout', ic:'🏹',en:'Roof Ranger',fi:'Kattosamooja',sk:{scout:3,might:2,cunning:1,craft:0,arcane:-1,charm:-2}},
- {id:'bard',   tag:'charm', ic:'🎻',en:'Sales Bard',fi:'Myyntibardi',sk:{charm:3,cunning:2,arcane:1,scout:0,craft:-1,might:-2}},
- {id:'rogue',  tag:'cunning',ic:'🗝️',en:'Logistics Rogue',fi:'Logistiikkaroisto',sk:{cunning:3,scout:2,charm:1,craft:0,might:-1,arcane:-2}},
- {id:'wizard', tag:'arcane',ic:'🔮',en:'AI Wizard',fi:'Tekoälyvelho',sk:{arcane:3,cunning:2,craft:1,scout:0,charm:-1,might:-2}},
- {id:'dwarf',  tag:'craft', ic:'⚒️',en:'Forge Dwarf',fi:'Pajakääpiö',sk:{craft:3,might:2,arcane:1,cunning:0,charm:-1,scout:-2}}
+ {id:'paladin',loot:'insp',tag:'might', ic:'🛡️',en:'Vent Paladin',fi:'Tuuletinpaladiini',sk:{might:3,charm:2,craft:1,scout:0,arcane:-1,cunning:-2}},
+ {id:'ranger',loot:'coin', tag:'scout', ic:'🏹',en:'Roof Ranger',fi:'Kattosamooja',sk:{scout:3,might:2,cunning:1,craft:0,arcane:-1,charm:-2}},
+ {id:'bard',loot:'insp',   tag:'charm', ic:'🎻',en:'Sales Bard',fi:'Myyntibardi',sk:{charm:3,cunning:2,arcane:1,scout:0,craft:-1,might:-2}},
+ {id:'rogue',loot:'coin',  tag:'cunning',ic:'🗝️',en:'Logistics Rogue',fi:'Logistiikkaroisto',sk:{cunning:3,scout:2,charm:1,craft:0,might:-1,arcane:-2}},
+ {id:'wizard',loot:'insp', tag:'arcane',ic:'🔮',en:'AI Wizard',fi:'Tekoälyvelho',sk:{arcane:3,cunning:2,craft:1,scout:0,charm:-1,might:-2}},
+ {id:'dwarf',loot:'coin',  tag:'craft', ic:'⚒️',en:'Forge Dwarf',fi:'Pajakääpiö',sk:{craft:3,might:2,arcane:1,cunning:0,charm:-1,scout:-2}}
 ];
 const TAGS={might:{en:'Might',fi:'Voima'},scout:{en:'Scouting',fi:'Tiedustelu'},charm:{en:'Charm',fi:'Karisma'},cunning:{en:'Cunning',fi:'Oveluus'},arcane:{en:'Arcane',fi:'Taikuus'},craft:{en:'Craft',fi:'Käsityö'}};
 const SCENES=[
-{dc:11,
+{dc:12,
  en:{t:"The Dragon's Order",n:"Midnight at the Grand Vent Forge. The night shift is just finishing its coffee when a shadow falls over the yard and every window starts to rattle. Emberbeard, the oldest dragon of the Northern Peaks, lands on the loading dock and drops an order scroll the size of a barn door. His lair is damp, his gold is turning green and his treasure smells like a wet sauna towel. He wants 10,000 VILPE roof vents installed by dawn, and he is not known for his patience with suppliers. How does the guild answer?"},
  fi:{t:"Lohikäärmeen tilaus",n:"Keskiyö Suuressa Tuuletinpajassa. Yövuoro on juuri juomassa kahviaan, kun piha pimenee ja jokainen ikkuna alkaa helistä. Hiiliparta, Pohjoisvuorten vanhin lohikäärme, laskeutuu lastauslaiturille ja pudottaa ladon oven kokoisen tilauskäärön. Hänen luolansa on kostea, kulta vihertää ja aarre haisee märältä saunapyyhkeeltä. Hän haluaa 10 000 VILPE-kattotuuletinta asennettuna aamunkoittoon mennessä, eikä hän ole tunnettu kärsivällisyydestään toimittajia kohtaan. Miten kilta vastaa?"},
  o:[
@@ -24,7 +24,7 @@ const SCENES=[
    en:{t:"Scan the lair with the VILPE Sense crystal",w:"The crystal glows: humidity 97%, gold oxidising, ventilation nonexistent. The dragon is moved that someone finally measured his problem, and he pays a generous deposit on the spot.",l:"The crystal connects to the wrong lair and streams a troll's bathroom. Live. On the big screen. Emberbeard is not amused, and the IT wizard is asked to stay after the meeting."},
    fi:{t:"Skannaa luola VILPE Sense -kristallilla",w:"Kristalli hehkuu: kosteus 97 %, kulta hapettuu, ilmanvaihto olematon. Lohikäärme liikuttuu, sillä vihdoin joku mittasi hänen ongelmansa, ja hän maksaa saman tien reilun ennakkomaksun.",l:"Kristalli yhdistää väärään luolaan ja striimaa peikon kylpyhuonetta. Suorana. Isolle näytölle. Hiiliparta ei ole huvittunut, ja IT-velhoa pyydetään jäämään palaverin jälkeen."}}
  ]},
-{dc:12,
+{dc:13,
  en:{t:"The Forge at Midnight",n:"The order is accepted, and the clock is ticking. Ten thousand vents by dawn means the Grand Vent Forge must run hotter than ever before. The moulding machines hiss, the conveyor belts rattle, and somewhere a production planner quietly redraws the whole week's schedule. The coffee is running low and the night is long. How do we ramp up production?"},
  fi:{t:"Paja keskiyöllä",n:"Tilaus on hyväksytty, ja kello käy. Kymmenentuhatta tuuletinta aamuun mennessä tarkoittaa, että Suuren Tuuletinpajan on käytävä kuumempana kuin koskaan. Valukoneet sihisevät, kuljettimet kolisevat, ja jossain tuotannonsuunnittelija piirtää hiljaa koko viikon aikataulun uusiksi. Kahvi on loppumassa ja yö on pitkä. Miten tuotanto nostetaan?"},
  o:[
@@ -38,7 +38,7 @@ const SCENES=[
    en:{t:"Enchant the line with AI runes",w:"The AI runes optimise everything: the moulds, the conveyor speed, even the coffee breaks. The forge now produces vents and motivational quotes in equal measure. Nobody fully understands how, but the numbers look fantastic.",l:"The AI decides the optimal number of vents is three. It is very confident about this and produces a beautiful slide deck explaining why. Someone has to restart it by hand."},
    fi:{t:"Lumoa linja tekoälyriimuilla",w:"Tekoälyriimut optimoivat kaiken: muotit, kuljettimen nopeuden ja jopa kahvitauot. Paja tuottaa nyt tuulettimia ja motivaatiolainauksia yhtä tahtia. Kukaan ei täysin ymmärrä miten, mutta luvut näyttävät upeilta.",l:"Tekoäly päättää, että optimaalinen määrä on kolme tuuletinta. Se on asiasta hyvin varma ja tekee perusteluista kauniin diaesityksen. Joku joutuu käynnistämään sen uudelleen käsin."}}
  ]},
-{dc:12,
+{dc:13,
  en:{t:"The Haunted Batch",n:"Halfway through the night, the forge goes strangely quiet. A fresh batch of vents rolls off the line, and every single one of them is whistling a ghostly tune. It is Halloween night, and the local ghosts have decided to move into the vents for the winter. The vents work perfectly, but they moan, rattle and occasionally ask about a long-lost love. The dragon will certainly not accept haunted vents. What does the guild do?"},
  fi:{t:"Kirottu erä",n:"Puolessa välissä yötä paja hiljenee oudosti. Linjalta valmistuu uusi erä tuulettimia, ja jokainen niistä viheltää aavemaista säveltä. On Halloween-yö, ja paikalliset haamut ovat päättäneet muuttaa tuulettimiin talveksi. Tuulettimet toimivat moitteetta, mutta ne voihkivat, kolisevat ja kyselevät välillä kauan sitten kadonneen rakkautensa perään. Lohikäärme ei varmasti hyväksy kummittelevia tuulettimia. Mitä kilta tekee?"},
  o:[
@@ -52,7 +52,7 @@ const SCENES=[
    en:{t:"Lure the ghosts out with a fake séance",w:"The rogues set up candles, a crystal ball and a very convincing spooky voice. The ghosts follow the voice out of the vents and into an abandoned sauna next door, where they are much happier. The whole batch is saved.",l:"The fake séance accidentally summons a real and very grumpy ancestor ghost. He has strong opinions about modern ventilation, and he will not stop sharing them. A large part of the batch is still haunted."},
    fi:{t:"Houkutellaan haamut ulos feikkiseanssilla",w:"Roistot virittävät kynttilät, kristallipallon ja erittäin vakuuttavan kummitusäänen. Haamut seuraavat ääntä ulos tuulettimista viereiseen hylättyyn saunaan, jossa ne viihtyvät paljon paremmin. Koko erä pelastuu.",l:"Feikkiseanssi manaa vahingossa paikalle oikean ja hyvin äreän esi-isähaamun. Hänellä on vahvoja mielipiteitä nykyaikaisesta ilmanvaihdosta, eikä hän lakkaa jakamasta niitä. Iso osa erästä kummittelee yhä."}}
  ]},
-{dc:12,
+{dc:13,
  en:{t:"The Roof Troll Raid",n:"Around three in the morning the warehouse alarm goes off. Roof trolls! These grey, mossy creatures live under leaky, damp roofs, and a well-ventilated roof is their worst nightmare. When they heard about the dragon's order, they broke into the warehouse and carried off whole pallets of finished vents. You can still hear them grunting as they drag the crates toward their hideout in the bog behind the old mill. If the vents sink into the mud, the order is in serious trouble. What does the guild do?"},
  fi:{t:"Kattopeikkojen ryöstöretki",n:"Kello kolmen aikaan yöllä varaston hälytin alkaa soida. Kattopeikot! Nämä harmaat, sammaleiset otukset asuvat vuotavien ja kosteiden kattojen alla, ja hyvin tuuletettu katto on niiden pahin painajainen. Kun ne kuulivat lohikäärmeen tilauksesta, ne murtautuivat varastoon ja veivät mukanaan kokonaisia lavoja valmiita tuulettimia. Niiden murinan kuulee yhä, kun ne kiskovat laatikoita kohti piilopaikkaansa vanhan myllyn takaisessa suossa. Jos tuulettimet uppoavat suohon, tilaus on vakavissa vaikeuksissa. Mitä kilta tekee?"},
  o:[
@@ -66,7 +66,7 @@ const SCENES=[
    en:{t:"Make the trolls a deal",w:"It turns out troll caves are damp too, and every troll suffers from terrible rheumatism. The guild trades the stolen pallets back for a free ventilation check of the troll caves. The trolls even help carry the crates home, grumbling all the way. A brand new customer segment!",l:"The trolls out-negotiate us. We get the crates back, but now owe them gold and a monthly newsletter about damp roofs. Their lawyer is surprisingly good."},
    fi:{t:"Tee peikkojen kanssa diili",w:"Paljastuu, että peikkojen luolatkin ovat kosteita ja jokaisella peikolla on kamala reuma. Kilta vaihtaa varastetut lavat takaisin ilmaiseen tuuletustarkastukseen peikkoluolissa. Peikot jopa auttavat kantamaan laatikot takaisin, mutisten koko matkan. Upouusi asiakassegmentti!",l:"Peikot neuvottelevat meidät nurkkaan. Saamme laatikot takaisin, mutta olemme nyt velkaa kultaa ja kuukausittaisen uutiskirjeen kosteista katoista. Niiden juristi on yllättävän hyvä."}}
  ]},
-{dc:13,
+{dc:14,
  en:{t:"The Rival Guild",n:"Not long after the troll raid, a messenger raven lands on the forge roof with bad news. The Damp & Drip Guild, the forge's oldest rival, has heard about the dragon's order. Their salesmen are already on their way to Emberbeard's lair with cheap knock-off vents and a slideshow claiming that VILPE vents attract lightning. If the dragon believes them, he might cancel the whole order. How does the guild respond?"},
  fi:{t:"Kilpaileva kilta",n:"Pian peikkojen ryöstöretken jälkeen viestikorppi laskeutuu pajan katolle huonojen uutisten kanssa. Kostea & Tippuva -kilta, pajan vanhin kilpailija, on kuullut lohikäärmeen tilauksesta. Sen myyjät ovat jo matkalla Hiiliparran luolalle halpojen kopiotuulettimien ja diaesityksen kanssa, jonka mukaan VILPE-tuulettimet houkuttelevat salamoita. Jos lohikäärme uskoo heitä, hän voi perua koko tilauksen. Miten kilta vastaa?"},
  o:[
@@ -80,7 +80,7 @@ const SCENES=[
    en:{t:"Send the dragon a side-by-side test",w:"The forge dwarves set up a fair test: one VILPE vent and one knock-off, side by side in a steaming sauna. After ten minutes the knock-off is dripping and the VILPE vent is purring. Emberbeard laughs so hard he sets a cloud on fire.",l:"The test rig is assembled in a hurry, and the VILPE vent ends up installed upside down. The knock-off wins round one. The dwarves demand a rematch, but the damage is done."},
    fi:{t:"Lähetä lohikäärmeelle vertailutesti",w:"Pajakääpiöt rakentavat reilun testin: yksi VILPE-tuuletin ja yksi kopio vierekkäin höyryävässä saunassa. Kymmenen minuutin päästä kopio tippuu ja VILPE-tuuletin kehrää. Hiiliparta nauraa niin, että sytyttää pilven tuleen.",l:"Testiteline kootaan kiireessä, ja VILPE-tuuletin päätyy ylösalaisin. Kopio voittaa ensimmäisen erän. Kääpiöt vaativat uusintaottelua, mutta vahinko on jo tapahtunut."}}
  ]},
-{dc:13,
+{dc:14,
  en:{t:"The Delivery",n:"The vents are packed and loaded. Between the forge and Emberbeard's lair lie the Misty Mountains, a rickety troll bridge with a very strict toll policy, and only three hours until dawn. The trucks are ready, the drivers are nervous, and the dragon has already sent two impatient smoke signals. How do we deliver?"},
  fi:{t:"Toimitus",n:"Tuulettimet on pakattu ja lastattu. Pajan ja Hiiliparran luolan välissä ovat Sumuvuoret, huojuva peikkosilta erittäin tiukalla tullipolitiikalla, ja aamunkoittoon on enää kolme tuntia. Rekat ovat valmiina, kuljettajat hermostuneita, ja lohikäärme on jo lähettänyt kaksi kärsimätöntä savumerkkiä. Miten toimitamme?"},
  o:[
@@ -94,7 +94,7 @@ const SCENES=[
    en:{t:"Open a portal straight into the lair",w:"Whoosh! The portal opens with a smell of ozone, and the vents arrive in a neat stack right next to the dragon's hoard. Emberbeard is delighted by the express service and asks whether it works for pizza too.",l:"The portal opens into the neighbouring dragon's lair instead. She is now a very happy VILPE customer. Emberbeard is not, and he can see her shiny new vents from his window."},
    fi:{t:"Avaa portaali suoraan luolaan",w:"Vuuh! Portaali aukeaa otsonin tuoksussa, ja tuulettimet ilmestyvät siistiin pinoon suoraan lohikäärmeen aarrekasan viereen. Hiiliparta ihastuu pikatoimitukseen ja kysyy, toimiiko se myös pizzalle.",l:"Portaali aukeaakin naapurilohikäärmeen luolaan. Hän on nyt hyvin tyytyväinen VILPE-asiakas. Hiiliparta ei ole, ja hän näkee naapurin kiiltävät uudet tuulettimet ikkunastaan."}}
  ]},
-{dc:13,
+{dc:14,
  en:{t:"Storm on the Summit",n:"The vents have reached the foot of Emberbeard's mountain, but the lair is at the very top. Just as the guild starts the climb, a howling blizzard rolls in. The wind is strong enough to knock a dwarf off his feet, the path is covered in ice, and every crate has to be up there before the sun rises. Somewhere above, the dragon is pacing back and forth. How does the guild get the vents to the top?"},
  fi:{t:"Myrsky huipulla",n:"Tuulettimet ovat päässeet Hiiliparran vuoren juurelle, mutta luola on aivan huipulla. Juuri kun kilta aloittaa nousun, paikalle vyöryy ulvova lumimyrsky. Tuuli kaataa kääpiönkin, polku on jäässä, ja jokaisen laatikon on oltava ylhäällä ennen auringonnousua. Jossain ylhäällä lohikäärme kävelee hermostuneena edestakaisin. Miten kilta saa tuulettimet huipulle?"},
  o:[
@@ -108,7 +108,7 @@ const SCENES=[
    en:{t:"Build a crane out of spare vent pipes",w:"The forge dwarves bolt spare vent pipes together into a magnificent crane and winch the crates straight up the cliff. The dragon peers over the edge, sees the crane and asks whether it is for sale.",l:"The crane works perfectly for the first ten crates. Then the wind catches it, and it spins slowly like a weathervane, scattering vents all over the mountainside."},
    fi:{t:"Rakenna nosturi ylimääräisistä tuuletinputkista",w:"Pajakääpiöt pulttaavat ylimääräiset tuuletinputket upeaksi nosturiksi ja vinssaavat laatikot suoraan jyrkänteen yli. Lohikäärme kurkistaa reunan yli, näkee nosturin ja kysyy, onko se myynnissä.",l:"Nosturi toimii täydellisesti ensimmäiset kymmenen laatikkoa. Sitten tuuli tarttuu siihen, ja se pyörii hitaasti kuin tuuliviiri levittäen tuulettimia pitkin vuorenrinnettä."}}
  ]},
-{dc:14,
+{dc:15,
  en:{t:"The Final Inspection",n:"Dawn breaks over the Northern Peaks. Emberbeard circles his mountain slowly and inspects every vent with one enormous, glowing eye. Below, a nervous project manager clutches a checklist and tries to remember whether the warranty covers dragon fire. The whole guild holds its breath. One last chance to win him over."},
  fi:{t:"Lopputarkastus",n:"Aamu sarastaa Pohjoisvuorten yllä. Hiiliparta kiertää vuortaan hitaasti ja tarkastaa jokaisen tuulettimen yhdellä valtavalla, hehkuvalla silmällä. Alhaalla hermostunut projektipäällikkö puristaa tarkistuslistaa ja yrittää muistaa, kattaako takuu lohikäärmeen tulen. Koko kilta pidättää hengitystään. Viimeinen tilaisuus voittaa hänet puolelleen."},
  o:[
@@ -159,7 +159,7 @@ en:{title:"The Dragon's Order",sub:"A party adventure in the Grand Vent Forge of
  guildDie:"Roll a guild die",guild:"Guild die",hands:"Hands",fullscreen:"Fullscreen",live:"Live",offline:"Offline: hand votes and guild dice only",
  crits:"Natural 20s",fumbles:"Natural 1s",best:"Top roll",tieBreak:"A tie! The dice decided.",
  prologue:"Tonight the Grand Vent Forge of VILPE takes on its strangest customer yet. Create your hero on your phone: every class has its own strengths and weaknesses, from +3 to −2.",
- tagHelp:"Bonus classes",allVoted:"Everyone has voted! Moving on…",allRolled:"Everyone has rolled! The guild's fate is sealed…",fateRolling:"The guild's fate is being decided…",questLog:"Quest log",sceneHero:"Hero of the scene",vsWord:"vs",tl_fail:"Failure",tl_partial:"Partial",tl_success:"Success",tl_legendary:"Legendary",nowPlaying:"Now",endStats:"Delivered",ofOrder:"of 10,000 vents",reconnecting:"Reconnecting…",inRoom:"connected",waking:"Waking up the forge… (can take up to a minute)",hostKeyBad:"Wrong DM key. Open the DM link with the correct ?key=",joinUrl:"or open",onlineN:"online",kick:"Remove"},
+ tagHelp:"Bonus classes",coins:"Coins",insp:"Inspiration",coinsShort:"coins",inspShort:"inspiration",tier_severe:"Total collapse",tl_severe:"Collapse",severeNote:"Too deep a hole: no treasure can save this. Penalties are 1.5× and nobody earns loot.",rescueTitle:"Rescue!",rescueSub:"Throw coins and inspiration into the fight on your phones!",rescueNeed:"Still needed",rescuePts:"points",rescued:"Rescued!",rescueShort:"Not enough… yet!",rescueTo:"Push the guild up to",rescueHelp:"15 coins or 5 inspiration = +1 to the guild's total.",giveCoins:"15 → +1",giveInsp:"5 → +1",rescueDone:"Done",rescueDoneMsg:"Done. Watch the big screen!",gaveTotal:"You've given",yourStash:"Your stash",lootGot:"Loot",streakHot:"Hot streak",streakCold:"Cold streak",noLoot:"No loot this time.",rescuedNote:"Rescued with",withoutRescue:"without the rescue",endRescue:"End rescue",aw_rich:"Richest adventurer",aw_insp:"Most inspiring",aw_gen:"Most generous",lootClass:"Collects",allGave:"Everyone is done!",allVoted:"Everyone has voted! Moving on…",allRolled:"Everyone has rolled! The guild's fate is sealed…",fateRolling:"The guild's fate is being decided…",questLog:"Quest log",sceneHero:"Hero of the scene",vsWord:"vs",tl_fail:"Failure",tl_partial:"Partial",tl_success:"Success",tl_legendary:"Legendary",nowPlaying:"Now",endStats:"Delivered",ofOrder:"of 10,000 vents",reconnecting:"Reconnecting…",inRoom:"connected",waking:"Waking up the forge… (can take up to a minute)",hostKeyBad:"Wrong DM key. Open the DM link with the correct ?key=",joinUrl:"or open",onlineN:"online",kick:"Remove"},
 fi:{title:"Lohikäärmeen tilaus",sub:"Juhla-seikkailu VILPEn Suuressa Tuuletinpajassa",run:"Pyöritä peliä (iso näyttö + pelinjohtaja)",join:"Liity pelaajaksi",
  connecting:"Yhdistetään kiltasaliin…",noRoom:"Live-peliin ei saada yhteyttä täältä. Varmista, että olet kirjautunut claude.ai:hin ja avasit linkin, jonka pelinjohtaja jakoi.",
  yourName:"Sankarisi nimi",namePh:"esim. Herra Tuuletin",pickClass:"Valitse hahmoluokka",joinBtn:"Liity kiltaan",bonusOn:"+3:",
@@ -180,7 +180,7 @@ fi:{title:"Lohikäärmeen tilaus",sub:"Juhla-seikkailu VILPEn Suuressa Tuuletinp
  guildDie:"Heitä killan noppa",guild:"Killan noppa",hands:"Kädet",fullscreen:"Koko näyttö",live:"Yhteys päällä",offline:"Ei yhteyttä: vain käsiäänestys ja killan nopat",
  crits:"Luonnolliset 20:t",fumbles:"Luonnolliset 1:t",best:"Paras heitto",tieBreak:"Tasapeli! Noppa ratkaisi.",
  prologue:"Tänä yönä VILPEn Suuri Tuuletinpaja kohtaa kaikkien aikojen oudoimman asiakkaansa. Luo sankarisi puhelimella: jokaisella luokalla on omat vahvuutensa ja heikkoutensa, +3:sta −2:een.",
- tagHelp:"Bonusluokat",allVoted:"Kaikki ovat äänestäneet! Jatketaan…",allRolled:"Kaikki ovat heittäneet! Killan kohtalo sinetöityy…",fateRolling:"Killan kohtalo ratkeaa…",questLog:"Seikkailun kulku",sceneHero:"Kohtauksen sankari",vsWord:"vs",tl_fail:"Epäonnistui",tl_partial:"Osittain",tl_success:"Onnistui",tl_legendary:"Legendaarinen",nowPlaying:"Nyt",endStats:"Toimitettu",ofOrder:"/ 10 000 tuuletinta",reconnecting:"Yhdistetään uudelleen…",inRoom:"yhteydessä",waking:"Herätellään pajaa… (voi kestää minuutin)",hostKeyBad:"Väärä pelinjohtajan avain. Avaa DM-linkki oikealla ?key=-arvolla",joinUrl:"tai avaa",onlineN:"paikalla",kick:"Poista"}
+ tagHelp:"Bonusluokat",coins:"Kolikot",insp:"Inspiraatio",coinsShort:"kolikkoa",inspShort:"inspiraatiota",tier_severe:"Täydellinen romahdus",tl_severe:"Romahdus",severeNote:"Liian syvä kuoppa: mikään aarre ei pelasta tätä. Rangaistukset ovat 1,5-kertaiset, eikä kukaan saa saalista.",rescueTitle:"Pelastus!",rescueSub:"Heittäkää kolikoita ja inspiraatiota peliin puhelimilla!",rescueNeed:"Tarvitaan vielä",rescuePts:"pistettä",rescued:"Pelastettu!",rescueShort:"Ei vielä riitä…",rescueTo:"Nostakaa kilta tasolle",rescueHelp:"15 kolikkoa tai 5 inspiraatiota = +1 killan yhteistulokseen.",giveCoins:"15 → +1",giveInsp:"5 → +1",rescueDone:"Valmis",rescueDoneMsg:"Valmis. Seuraa isoa näyttöä!",gaveTotal:"Olet antanut",yourStash:"Aarrekätkösi",lootGot:"Saalis",streakHot:"Kuuma putki",streakCold:"Kylmä putki",noLoot:"Ei saalista tällä kertaa.",rescuedNote:"Pelastettu",withoutRescue:"ilman pelastusta",endRescue:"Päätä pelastus",aw_rich:"Rikkain seikkailija",aw_insp:"Innostavin",aw_gen:"Anteliain",lootClass:"Kerää",allGave:"Kaikki ovat valmiita!",allVoted:"Kaikki ovat äänestäneet! Jatketaan…",allRolled:"Kaikki ovat heittäneet! Killan kohtalo sinetöityy…",fateRolling:"Killan kohtalo ratkeaa…",questLog:"Seikkailun kulku",sceneHero:"Kohtauksen sankari",vsWord:"vs",tl_fail:"Epäonnistui",tl_partial:"Osittain",tl_success:"Onnistui",tl_legendary:"Legendaarinen",nowPlaying:"Nyt",endStats:"Toimitettu",ofOrder:"/ 10 000 tuuletinta",reconnecting:"Yhdistetään uudelleen…",inRoom:"yhteydessä",waking:"Herätellään pajaa… (voi kestää minuutin)",hostKeyBad:"Väärä pelinjohtajan avain. Avaa DM-linkki oikealla ?key=-arvolla",joinUrl:"tai avaa",onlineN:"paikalla",kick:"Poista"}
 };
 
 
@@ -188,7 +188,11 @@ const cls=id=>CLASSES.find(c=>c.id===id);
 const d20=()=>1+Math.floor(Math.random()*20);
 const modOf=(clsId,tag)=>{const c=cls(clsId);return c&&c.sk?(c.sk[tag]||0):0;};
 const rollTotal=(r,clsId,tag)=>r===1?0:Math.max(0,r+modOf(clsId,tag))+(r===20?5:0);
-const tierOf=(avg,dc)=>avg>=dc+5?'legendary':avg>=dc?'success':avg>=dc-3?'partial':'fail';
-const GAME={CLASSES,TAGS,SCENES,ENDINGS,T,cls,d20,rollTotal,tierOf,modOf};
+const tierOf=(avg,dc)=>avg>=dc+5?'legendary':avg>=dc?'success':avg>=dc-3?'partial':avg>=dc-6?'fail':'severe';
+const TIERS=['severe','fail','partial','success','legendary'];
+// loot from one d20: coins d20/2 (+3 coin classes), inspiration d20/5 (+2 inspiration classes), nat 20 doubles, nat 1 nothing
+const lootOf=(r,clsId)=>{if(r===1)return{c:0,i:0};const c=cls(clsId);let co=Math.floor(r/2)+(c&&c.loot==='coin'?3:0),ins=Math.floor(r/5)+(c&&c.loot==='insp'?2:0);if(r===20){co*=2;ins*=2;}return{c:co,i:ins};};
+const streakMult=s=>s>=4?2:s>=2?1.5:1;
+const GAME={CLASSES,TAGS,SCENES,ENDINGS,T,cls,d20,rollTotal,tierOf,modOf,TIERS,lootOf,streakMult};
 if(typeof module!=='undefined'&&module.exports)module.exports=GAME;else root.GAME=GAME;
 })(this);
